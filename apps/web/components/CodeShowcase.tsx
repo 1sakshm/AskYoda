@@ -17,14 +17,19 @@ const N = "text-tangerine-300"; // numbers
 const TS: Tok[][] = [
   [["import", K], [" { AskYoda } "], ["from", K], [' "askyoda"', S], [";"]],
   [[""]],
+  [["const", K], [" yoda = "], ["new", K], [" AskYoda({"]],
+  [["  tinyfishKey", P], [": process.env.TINYFISH_API_KEY,"]],
   [
-    ["const", K],
-    [" yoda = "],
-    ["new", K],
-    [" AskYoda({ "],
-    ["tinyfishKey", P],
-    [": process.env.TINYFISH_API_KEY });"],
+    ["  llm", P],
+    [": { "],
+    ["provider", P],
+    [": "],
+    ['"gemini"', S],
+    [", "],
+    ["apiKey", P],
+    [": process.env.GEMINI_API_KEY },"],
   ],
+  [["});"]],
   [[""]],
   [["const", K], [" run = "], ["await", K], [" yoda.run({"]],
   [
@@ -51,7 +56,7 @@ const TS: Tok[][] = [
   [["});"]],
   [[""]],
   [["run.status", P], ["  "], ['// "verified" — checked, not trusted', C]],
-  [["run.result", P], ["  "], ['// all 30 laptops, after clicking "More"', C]],
+  [["run.result", P], ["  "], ["// all 24 laptops, not just the first screen", C]],
   [["run.diagnoses", P], [" "], ["// what failed, where, and the fix applied", C]],
 ];
 

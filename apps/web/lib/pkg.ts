@@ -1,11 +1,8 @@
-/**
- * The askyoda npm package. Set NEXT_PUBLIC_NPM_PUBLISHED=true on the web deploy once
- * `npm publish` has run: until then the site says "publishing soon" and links to the source.
- */
+/** The askyoda npm package (published on npm since 2026-10-31). */
 export const PKG = {
   name: "askyoda",
   version: "0.1.0",
-  published: process.env.NEXT_PUBLIC_NPM_PUBLISHED === "true",
+  published: true,
   npmUrl: "https://www.npmjs.com/package/askyoda",
   sourceUrl: "https://github.com/1sakshm/AskYoda/tree/main/packages/askyoda",
   install: "npm i askyoda",
