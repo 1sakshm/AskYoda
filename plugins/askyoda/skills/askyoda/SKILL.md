@@ -20,10 +20,11 @@ Login walls and CAPTCHAs stop immediately as **needs_human** instead of burning 
 
 - Requires Node 18+ and a TinyFish key in the environment: `TINYFISH_API_KEY`
   (from https://agent.tinyfish.ai/api-keys). Runs bill to the user's own TinyFish account.
-- Optional but recommended: `GEMINI_API_KEY` (free tier works; pass
-  `--model gemini-3.5-flash-lite` for a much larger free daily quota) or `ANTHROPIC_API_KEY`.
-  With an LLM key the free Fetch rung can answer simple pages for 0 credits, and diagnoses get
-  smarter. Without one, everything still works on built-in rules.
+- Optional but recommended: `GEMINI_API_KEY` or `ANTHROPIC_API_KEY`. With an LLM key the free
+  Fetch rung can answer simple pages for 0 credits, and diagnoses get smarter. Without one,
+  everything still works on built-in rules. When using a Gemini key, pass
+  `--model gemini-3.5-flash-lite` by default: the package's default Gemini model has a free
+  tier of only ~20 requests a day, and Flash-Lite's is far larger.
 - If `TINYFISH_API_KEY` is missing, stop and tell the user how to get one rather than trying
   to scrape the site another way — the whole point is the verified result.
 - Never print or log the keys.
@@ -45,25 +46,33 @@ Pick the check from what the user actually needs:
 | a known fact to confirm (a price, a name) | `--contains "TEXT"` or `--regex "PATTERN"` |
 
 The `<path>` in `--min-items` is the key the list will live under in the JSON result. Name it in
-the goal too ("…return them as `laptops`…") so the agent and the check agree.
+the goal too ("…return them as laptops") so the agent and the check agree.
+
+`--min-items` is a floor, not an exact count. If the user wants "the first 5", say "the first 5"
+in the goal and trim `result` to 5 when presenting it.
 
 ## Running it
 
 ```sh
 npx -y askyoda run "<url>" "<goal in plain English>" \
   --min-items laptops:20 \
+  --model gemini-3.5-flash-lite \
   --max-credits 40 \
   --json
 ```
 
 - Write the goal the way a person would ask, and say what to return
-  ("List the laptops in this shop with their name and price, as `laptops`.").
+  ("List the laptops in this shop with their name and price, as laptops."). Keep backticks and
+  `$` out of the goal: inside a double-quoted shell string they get interpreted.
 - `--json` prints one JSON object at the end; drop it if the user wants to watch progress live.
-- Useful flags: `--start agent` (skip Fetch for pages you know are interactive),
-  `--max-attempts N`, `--proxy CC`, `--schema file.json`, `--llm gemini|anthropic|none`,
-  `--model NAME`.
-- Default budget is 40 credits / 4 attempts. Mention the budget to the user for big jobs, and
-  ask before raising it above ~60.
+- Let it start at Fetch by default: it's free, and when the text isn't enough AskYoda moves to
+  the browser agent on its own. Use `--start agent` only to save a step when you already know
+  the page needs a browser (infinite scroll, "Load more", tabs, pagination you must click).
+- Other flags: `--max-attempts N`, `--proxy CC`, `--schema file.json`,
+  `--llm gemini|anthropic|none`, `--model NAME`.
+- Defaults: 40 credits and 4 attempts, capped independently (`--max-credits`,
+  `--max-attempts`). Mention the budget to the user for big jobs, and ask before raising credits
+  above ~60.
 - Runs take from seconds (Fetch) to a few minutes (multi-page agent runs). Use a long command
   timeout (10 minutes) rather than letting the shell kill it mid-run.
 
@@ -72,8 +81,14 @@ Exit codes: `0` verified · `2` needs human escalation · `3` budget spent · `1
 
 ## Reading the result
 
-The `--json` output contains `status`, `result`, `reason`, `creditsUsed`,
-`baselineCreditsEstimate`, `attempts` and `diagnoses`.
+The `--json` output is large (full attempt configs). Read just `status`, `result`, `reason`,
+`creditsUsed` and `attemptsUsed`; look at `diagnoses` only when you need to explain a failure.
+Ignore `streaming_url`s unless the user wants to watch a run live.
+
+Diagnoses are AskYoda's best explanation of why an attempt fell short, not ground truth: a
+Fetch attempt can be labelled "needs interaction" when the text simply didn't contain the data
+(for example titles truncated in a listing). For a verified run the user cares about the answer
+and the cost, so don't relay intermediate diagnoses unless they ask.
 
 - **`verified`** — use `result`; it passed the check. Present it cleanly (tables for lists),
   and mention the cost: "verified on attempt 2, 12 credits".
