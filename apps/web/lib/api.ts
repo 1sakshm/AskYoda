@@ -68,8 +68,6 @@ export async function cancelRun(id: string): Promise<void> {
 
 export const streamUrl = (id: string) => `${API_BASE}/runs/${enc(id)}/stream`;
 
-export const sampleStreamUrl = `${API_BASE}/dev/sample-stream`;
-
 export const screenshotUrl = (id: string, attemptNo: number) =>
   `${API_BASE}/runs/${enc(id)}/attempts/${attemptNo}/screenshot`;
 

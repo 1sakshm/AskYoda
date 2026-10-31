@@ -5,19 +5,19 @@ import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 
 const NAV = [
-  { href: "/", label: "Run" },
+  { href: "/cases", label: "Prepared cases" },
+  { href: "/real", label: "Real websites" },
+  { href: "/recordings", label: "Recorded runs" },
   { href: "/results", label: "Results" },
-  { href: "/dev", label: "Sample" },
 ];
 
 function isActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/" || pathname.startsWith("/runs");
   return pathname.startsWith(href);
 }
 
 function Links({ pathname }: { pathname: string | null }) {
   return (
-    <nav className="flex items-center gap-1 rounded-full border border-ink-700 bg-ink-900/70 p-1">
+    <nav className="flex max-w-full items-center gap-1 overflow-x-auto rounded-full border border-ink-700 bg-ink-900/70 p-1">
       {NAV.map((item) => {
         const active = pathname !== null && isActive(pathname, item.href);
         return (
@@ -25,7 +25,7 @@ function Links({ pathname }: { pathname: string | null }) {
             key={item.href}
             href={item.href}
             aria-current={active ? "page" : undefined}
-            className={`rounded-full px-4 py-1.5 text-sm transition-colors ${
+            className={`whitespace-nowrap rounded-full px-3 py-1.5 text-sm transition-colors sm:px-4 ${
               active
                 ? "bg-ink-100 font-medium text-ink-950"
                 : "text-ink-300 hover:bg-ink-800 hover:text-ink-50"

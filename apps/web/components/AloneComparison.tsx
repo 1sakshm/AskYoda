@@ -55,7 +55,9 @@ export default function AloneComparison({ run }: { run: DemoRun }) {
   return (
     <div className="divide-y divide-ink-700/70 rounded-xl border border-ink-700 bg-ink-950/60">
       <Row label="TinyFish alone" ok={alone.passed}>
-        {alone.passed ? "Also passed" : `${said}${alone.verify_summary ?? "failed the check"}`}
+        {alone.passed
+          ? "Also passed"
+          : `${said}${(alone.verify_summary ?? "failed the check").replace(/^Rejected:\s*/, "")}`}
       </Row>
       <Row
         label="With AskYoda"

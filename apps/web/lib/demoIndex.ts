@@ -1,4 +1,5 @@
 import type { FailureClass, RunStatus, Stats, StatsRow } from "./types";
+import type { VideoTiming } from "./videoClock";
 
 /** One bundled run, as written by scripts/sync-demo.mjs into public/demo/index.json. */
 export interface DemoRun {
@@ -17,6 +18,8 @@ export interface DemoRun {
   events: number;
   has_screenshots: boolean;
   screenshot_attempts: number[];
+  /** Attempts with a video of TinyFish's browser (attempt-<n>.mp4 + its time map). */
+  video_attempts?: number[];
   path: string;
   /** From the recording's site entry (fixtures/sites.yaml), when it has one. */
   summary?: string | null;
@@ -49,6 +52,27 @@ export const demoIdFromRunId = (runId: string): string | null =>
 export const demoStreamUrl = (id: string) => `demo:/demo/runs/${encodeURIComponent(id)}.jsonl`;
 export const demoScreenshotUrl = (id: string, attemptNo: number) =>
   `/demo/runs/${encodeURIComponent(id)}/attempt-${attemptNo}.jpg`;
+
+export const demoVideoUrl = (id: string, attemptNo: number) =>
+  `/demo/runs/${encodeURIComponent(id)}/attempt-${attemptNo}.mp4`;
+
+/** Each video's time map (small JSON), keyed by attempt; a missing one just plays unpaced. */
+export async function loadVideoTimings(
+  run: DemoRun,
+  fetchImpl: typeof fetch = fetch,
+): Promise<Map<number, VideoTiming>> {
+  const entries = await Promise.all(
+    (run.video_attempts ?? []).map(async (n) => {
+      try {
+        const res = await fetchImpl(`/demo/runs/${encodeURIComponent(run.id)}/attempt-${n}.json`);
+        return res.ok ? ([n, (await res.json()) as VideoTiming] as const) : null;
+      } catch {
+        return null;
+      }
+    }),
+  );
+  return new Map(entries.filter((e) => e !== null));
+}
 
 export async function loadDemoIndex(fetchImpl: typeof fetch = fetch): Promise<DemoIndex> {
   const res = await fetchImpl(DEMO_INDEX_URL);

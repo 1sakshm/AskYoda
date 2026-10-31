@@ -93,7 +93,7 @@ export default function DemoRunPicker() {
     let cancelled = false;
     loadDemoIndex()
       .then((index) => {
-        if (!cancelled) setRuns(orderForDisplay(index.runs));
+        if (!cancelled) setRuns(orderForDisplay(index.runs.filter((r) => r.kind !== "sample")));
       })
       .catch((err: unknown) => {
         if (!cancelled) setError(String(err));

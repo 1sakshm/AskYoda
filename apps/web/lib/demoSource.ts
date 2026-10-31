@@ -1,4 +1,5 @@
 import type { UiEvent } from "./types";
+import type { PlaybackGate } from "./videoClock";
 
 /** Stream URLs with this prefix are played from a bundled JSONL file instead of the API. */
 export const DEMO_PREFIX = "demo:";
@@ -11,6 +12,8 @@ export interface PlaybackOptions {
   maxGapMs?: number;
   /** Events with `seq` <= this were already shown (resume after a remount): emit none of them. */
   after?: number;
+  /** Paces events by a recorded video instead of the clock (see lib/videoClock.ts). */
+  gate?: PlaybackGate;
   onStart?: () => void;
   onDone?: () => void;
   onError?: (message: string) => void;
@@ -63,13 +66,22 @@ export function playEvents(
   let timer: ReturnType<typeof setTimeout> | null = null;
   let cancelled = false;
 
-  const step = () => {
-    timer = null;
+  const gate = opts.gate;
+  const emit = () => {
     if (cancelled) return;
     onEvent(pending[index]);
     index += 1;
-    if (index < pending.length) timer = setTimeout(step, gaps[index]);
-    else opts.onDone?.();
+    if (index >= pending.length) return opts.onDone?.();
+    // An event paced by the video needs no clock gap: the video decides when it shows.
+    const gated = gate && gate.at(pending[index]) !== null;
+    timer = setTimeout(step, gated ? 0 : gaps[index]);
+  };
+  const step = () => {
+    timer = null;
+    if (cancelled) return;
+    const at = gate?.at(pending[index]) ?? null;
+    if (gate && at !== null) void gate.wait(pending[index], at).then(emit);
+    else emit();
   };
 
   if (pending.length === 0) opts.onDone?.();

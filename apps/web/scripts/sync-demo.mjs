@@ -5,7 +5,9 @@
 //   npm run demo:check    exit 1 if the bundled files differ from the fixtures (CI drift check)
 //
 // Sources (repo root): fixtures/sample-run.jsonl (hand-written illustrative sample) and
-// fixtures/traces/<id>.jsonl recordings, with optional fixtures/traces/<id>/attempt-<n>.jpg.
+// fixtures/traces/<id>.jsonl recordings, with optional fixtures/traces/<id>/attempt-<n>.jpg
+// (screenshot) and attempt-<n>.mp4 + attempt-<n>.json (video of the agent's browser and its
+// time map: wall-clock seconds -> video seconds).
 // Output is deterministic: sorted ids and keys, LF line endings, no timestamps of its own.
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -21,6 +23,7 @@ const OUT = resolve(flag("out") ?? join(WEB_ROOT, "public", "demo"));
 const SAMPLE_TITLE = "Illustrative sample: cookie popup on a shop page";
 const ID_RE = /^[a-z0-9][a-z0-9_-]*$/i;
 const SHOT_RE = /^attempt-(\d+)\.jpg$/;
+const VIDEO_RE = /^attempt-(\d+)\.mp4$/;
 
 function readEvents(path) {
   const lines = readFileSync(path, "utf8")
@@ -43,7 +46,15 @@ function readSidecar(dir, id, suffix) {
   return existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : null;
 }
 
-function summarize(id, kind, events, screenshotAttempts, meta = null, alone = null) {
+function summarize(
+  id,
+  kind,
+  events,
+  screenshotAttempts,
+  meta = null,
+  alone = null,
+  videoAttempts = [],
+) {
   const started = events.find((e) => e.type === "attempt_started");
   const verdict = events.findLast((e) => e.type === "verdict") ?? null;
   const budget = events.findLast((e) => e.type === "budget") ?? null;
@@ -75,6 +86,7 @@ function summarize(id, kind, events, screenshotAttempts, meta = null, alone = nu
     events: events.length,
     has_screenshots: screenshotAttempts.length > 0,
     screenshot_attempts: screenshotAttempts,
+    video_attempts: videoAttempts,
     path: `/demo/runs/${id}.jsonl`,
   };
 }
@@ -107,11 +119,18 @@ function buildOutputs() {
     const { text, events } = readEvents(source);
     files.set(`runs/${id}.jsonl`, Buffer.from(text, "utf8"));
     const shots = [];
+    const videos = [];
     if (shotDir && existsSync(shotDir)) {
-      for (const name of readdirSync(shotDir).sort()) {
-        const m = SHOT_RE.exec(name);
-        if (!m) continue;
-        shots.push(Number(m[1]));
+      const names = readdirSync(shotDir).sort();
+      for (const name of names) {
+        const shot = SHOT_RE.exec(name);
+        const video = VIDEO_RE.exec(name);
+        const timing = video ? name.replace(/\.mp4$/, ".json") : null;
+        if (shot) shots.push(Number(shot[1]));
+        else if (video && names.includes(timing)) {
+          videos.push(Number(video[1]));
+          files.set(`runs/${id}/${timing}`, readFileSync(join(shotDir, timing)));
+        } else continue;
         files.set(`runs/${id}/${name}`, readFileSync(join(shotDir, name)));
       }
     }
@@ -123,6 +142,7 @@ function buildOutputs() {
         shots.sort((a, b) => a - b),
         sidecars ? readSidecar(sidecars, id, "meta") : null,
         sidecars ? readSidecar(sidecars, id, "alone") : null,
+        videos.sort((a, b) => a - b),
       ),
     );
   };
@@ -155,8 +175,9 @@ function listExisting(dir, prefix = "") {
   );
 }
 
-const normalize = (rel, buf) =>
-  rel.endsWith(".jpg") ? buf : buf.toString("utf8").replace(/\r\n/g, "\n");
+const BINARY = [".jpg", ".mp4"];
+const isBinary = (rel) => BINARY.some((ext) => rel.endsWith(ext));
+const normalize = (rel, buf) => (isBinary(rel) ? buf : buf.toString("utf8").replace(/\r\n/g, "\n"));
 
 function check(files) {
   const problems = [];
@@ -165,7 +186,7 @@ function check(files) {
     const path = join(OUT, rel);
     if (!existing.has(rel)) problems.push(`missing public/demo/${rel}`);
     else if (String(normalize(rel, readFileSync(path))) !== String(normalize(rel, want))) {
-      if (!(rel.endsWith(".jpg") && readFileSync(path).equals(want))) {
+      if (!(isBinary(rel) && readFileSync(path).equals(want))) {
         problems.push(`stale public/demo/${rel}`);
       }
     }

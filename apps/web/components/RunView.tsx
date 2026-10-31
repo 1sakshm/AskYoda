@@ -10,6 +10,7 @@ import VerdictCard from "@/components/VerdictCard";
 import { apiErrorMessages } from "@/lib/runRequest";
 import { useRunStream } from "@/lib/useRunStream";
 import type { RunMode } from "@/lib/types";
+import type { PlaybackGate } from "@/lib/videoClock";
 
 interface Props {
   streamUrl: string;
@@ -17,7 +18,7 @@ interface Props {
   runId: string;
   /** Known before the stream starts (from GET /runs/{id}); the stream fills it in otherwise. */
   header?: { url: string; goal: string } | null;
-  /** Show a collapsible log of every UI event (used by /dev). */
+  /** Show a collapsible log of every UI event. */
   rawLog?: boolean;
   /** Live run with a recorded trace: cancel it and open the replay (shown until the verdict). */
   onSwitchToReplay?: () => Promise<void>;
@@ -27,6 +28,10 @@ interface Props {
   note?: string;
   /** Screenshot source for BrowserPanel (bundled files in the static demo). */
   screenshotSrc?: (attemptNo: number) => string | null;
+  /** Recorded video of TinyFish's browser per attempt (bundled recordings). */
+  videoSrc?: (attemptNo: number) => string | null;
+  /** Paces a recorded run's events by its attempt videos. Must be stable across renders. */
+  gate?: PlaybackGate;
 }
 
 function ModeBadge({ mode, label }: { mode: RunMode | null; label?: string }) {
@@ -60,8 +65,10 @@ export default function RunView({
   badgeLabel,
   note,
   screenshotSrc,
+  videoSrc,
+  gate,
 }: Props) {
-  const { state, events, connected, error } = useRunStream(streamUrl);
+  const { state, events, connected, error } = useRunStream(streamUrl, gate);
   const [switching, setSwitching] = useState(false);
   const [switchError, setSwitchError] = useState<string | null>(null);
   const shown = header ?? state.header;
@@ -130,6 +137,7 @@ export default function RunView({
             mode={mode}
             runId={runId}
             screenshotSrc={screenshotSrc}
+            videoSrc={videoSrc}
           />
           {state.done && <VerdictCard verdict={state.verdict} />}
         </div>

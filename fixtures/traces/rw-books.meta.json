@@ -1,0 +1,6 @@
+{
+  "title": "Bookshop catalogue",
+  "summary": "books.toscrape.com lists 20 books per page across 50 pages. One plain TinyFish run spent 12 credits and came back with an empty list; the check needs 40. AskYoda diagnosed each failure and patched the next attempt: 40 books, verified on attempt 4.",
+  "kind": "real",
+  "expected_class": "misread_page"
+}

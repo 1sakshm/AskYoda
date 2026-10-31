@@ -1,0 +1,12 @@
+{
+  "site_id": "rw-books",
+  "tinyfish_status": "COMPLETED",
+  "passed": false,
+  "verify_summary": "Rejected: books has 0 items, need 40",
+  "failure_class": "misread_page",
+  "result": {
+    "books": []
+  },
+  "credits": 12,
+  "recorded_at": "2026-10-31T08:54:08.973396Z"
+}

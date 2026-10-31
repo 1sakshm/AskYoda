@@ -1,0 +1,6 @@
+{
+  "title": "Laptops behind infinite scroll",
+  "summary": "webscraper.io's infinite-scroll laptop shop loads more as you scroll. TinyFish alone returned an empty list; the check needs 20. AskYoda patched twice and escalated to the stealth browser: 24 laptops, verified on attempt 3.",
+  "kind": "real",
+  "expected_class": "misread_page"
+}

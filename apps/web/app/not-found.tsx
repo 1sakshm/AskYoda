@@ -15,8 +15,8 @@ export default function NotFound() {
         <Link href="/results" className="btn-ghost">
           See results
         </Link>
-        <Link href="/dev" className="btn-ghost">
-          Sample run
+        <Link href="/recordings" className="btn-ghost">
+          Recorded runs
         </Link>
       </div>
     </main>

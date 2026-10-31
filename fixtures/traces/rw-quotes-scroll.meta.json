@@ -1,0 +1,6 @@
+{
+  "title": "Quotes behind infinite scroll",
+  "summary": "quotes.toscrape.com/scroll loads 10 quotes at a time as you scroll. One plain TinyFish run returned the first 10 and said COMPLETED; the check needs 30. AskYoda diagnosed it and kept patching until the run scrolled for more: 30 quotes, verified on attempt 4.",
+  "kind": "real",
+  "expected_class": "misread_page"
+}

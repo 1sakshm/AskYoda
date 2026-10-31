@@ -1,0 +1,6 @@
+{
+  "title": "Laptops behind 'More'",
+  "summary": "webscraper.io's test shop shows 6 laptops and a 'More' button. TinyFish alone used 15 credits and returned an empty list; the check needs 20. AskYoda diagnosed a misread and the retry pressed 'More': 30 laptops, verified on attempt 2.",
+  "kind": "real",
+  "expected_class": "misread_page"
+}

@@ -96,7 +96,7 @@ function ScenarioCard({ site, recording, starting, error, onRun }: CardProps) {
  * One-click live runs on sites prepared in advance (fixtures/sites.yaml entries with a title):
  * our own test pages built to fail, then real websites. Each click spends the shared budget.
  */
-export default function ScenarioCards() {
+export default function ScenarioCards({ kind }: { kind: "lab" | "real" }) {
   const router = useRouter();
   const [groups, setGroups] = useState<ScenarioGroups | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -156,57 +156,27 @@ export default function ScenarioCards() {
     );
   }
   if (!groups) return <p className="animate-pulse text-ink-400">Loading prepared cases…</p>;
-  if (groups.lab.length === 0 && groups.real.length === 0) return null;
 
-  const sections = [
-    {
-      key: "lab",
-      title: "Test pages built to fail",
-      blurb:
-        "Our own pages, each built to trip one failure on purpose. All data on them is fictional.",
-      sites: groups.lab,
-    },
-    {
-      key: "real",
-      title: "Real websites",
-      blurb:
-        "Public sites (scraping sandboxes where possible) with the same failures in the wild. Less predictable: real sites change.",
-      sites: groups.real,
-    },
-  ].filter((s) => s.sites.length > 0);
-
+  const sites = kind === "lab" ? groups.lab : groups.real;
+  if (sites.length === 0) {
+    return (
+      <p className="rounded-2xl border border-dashed border-ink-700 px-6 py-12 text-center text-ink-400">
+        No cases here yet.
+      </p>
+    );
+  }
   return (
-    <section id="scenarios" className="scroll-mt-24 space-y-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="kicker">One click, real run</p>
-          <h2 className="mt-2 font-display text-4xl tracking-tight text-ink-50">Prepared cases</h2>
-        </div>
-        <p className="max-w-md text-ink-300">
-          Each starts a live run on a page prepared in advance. It calls TinyFish for real, so it
-          spends the shared budget.
-        </p>
-      </div>
-      {sections.map((section) => (
-        <div key={section.key} className="space-y-4">
-          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-ink-700/70 pb-3">
-            <h3 className="text-lg font-medium text-ink-50">{section.title}</h3>
-            <p className="text-sm text-ink-400">{section.blurb}</p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {section.sites.map((site) => (
-              <ScenarioCard
-                key={site.id}
-                site={site}
-                recording={recordings.get(site.id) ?? null}
-                starting={starting}
-                error={errors[site.id]}
-                onRun={run}
-              />
-            ))}
-          </div>
-        </div>
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      {sites.map((site) => (
+        <ScenarioCard
+          key={site.id}
+          site={site}
+          recording={recordings.get(site.id) ?? null}
+          starting={starting}
+          error={errors[site.id]}
+          onRun={run}
+        />
       ))}
-    </section>
+    </div>
   );
 }

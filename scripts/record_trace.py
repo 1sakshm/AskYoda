@@ -2,7 +2,7 @@
 
 Talks to the running API over HTTP only (start it first with `make api`; it needs real keys).
 
-    make record SITE=<id>      # live run -> fixtures/traces/<id>.jsonl (+ one JPEG per attempt)
+    make record SITE=<id>      # live run -> fixtures/traces/<id>.jsonl (+ JPEG, MP4 per attempt)
     make baseline SITE=<id>    # one stealth + proxy run -> prints `baseline_steps: N`
     make alone SITE=<id>       # one plain TinyFish agent run -> fixtures/traces/<id>.alone.json
 
@@ -11,12 +11,17 @@ Equivalent: cd apps/api && uv run python ../../scripts/record_trace.py --site <i
 
 import argparse
 import json
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
 import httpx
 import yaml
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from stream_capture import Capture, encode  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 FIXTURES = REPO / "fixtures"
@@ -69,9 +74,13 @@ def describe(event: dict[str, Any]) -> str:
     return f"  {kind}"
 
 
-def follow(client: httpx.Client, api: str, run_id: str) -> list[str]:
-    """Return every UI event payload, verbatim, until the verdict."""
+def follow(
+    client: httpx.Client, api: str, run_id: str, frames_root: Path | None = None
+) -> tuple[list[str], dict[int, Capture]]:
+    """Every UI event payload, verbatim, until the verdict. With `frames_root`, also capture
+    TinyFish's live browser for each agent attempt (from its live_view until its verify)."""
     lines: list[str] = []
+    captures: dict[int, Capture] = {}
     with client.stream("GET", f"{api}/runs/{run_id}/stream", timeout=STREAM_TIMEOUT) as resp:
         resp.raise_for_status()
         for line in resp.iter_lines():
@@ -81,9 +90,30 @@ def follow(client: httpx.Client, api: str, run_id: str) -> list[str]:
             lines.append(payload)
             event = json.loads(payload)
             print(describe(event))
+            n = event.get("attempt_no")
+            if frames_root and event["type"] == "live_view" and n not in captures:
+                url = event["streaming_url"]
+                captures[n] = Capture(url, frames_root / f"attempt-{n}").start()
+            elif event["type"] == "verify" and n in captures:
+                captures[n].stop()
             if event["type"] == "verdict":
                 break
-    return lines
+    for capture in captures.values():
+        capture.stop()
+    return lines, captures
+
+
+def save_videos(captures: dict[int, Capture], site_id: str) -> int:
+    """attempt-<n>.mp4 for every attempt whose live browser was captured."""
+    saved = 0
+    folder = FIXTURES / "traces" / site_id
+    for n, capture in sorted(captures.items()):
+        if capture.error:
+            print(f"  video for attempt {n} failed: {capture.error}")
+        if encode(capture, folder / f"attempt-{n}.mp4"):
+            saved += 1
+            print(f"  video attempt {n}: {len(capture.frames)} frames")
+    return saved
 
 
 def save_screenshots(client: httpx.Client, api: str, run: dict[str, Any], site_id: str) -> int:
@@ -150,7 +180,9 @@ def main() -> int:
         run_id = created.json()["run_id"]
         label = "baseline" if args.baseline else "alone" if args.alone else "record"
         print(f"run {run_id} ({label}) for {args.site}")
-        lines = follow(client, api, run_id)
+        recording = not (args.baseline or args.alone)
+        frames_root = Path(tempfile.mkdtemp(prefix=f"frames-{args.site}-")) if recording else None
+        lines, captures = follow(client, api, run_id, frames_root)
         run = client.get(f"{api}/runs/{run_id}").json()
 
         if args.baseline:
@@ -171,9 +203,24 @@ def main() -> int:
         (FIXTURES / "traces" / f"{args.site}.meta.json").write_text(
             json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
         )
+        folder = FIXTURES / "traces" / args.site
+        if folder.is_dir():  # files from an older recording of this site would mislead
+            for old in [
+                *folder.glob("attempt-*.jpg"),
+                *folder.glob("attempt-*.webm"),
+                *folder.glob("attempt-*.mp4"),
+                *folder.glob("attempt-*.json"),
+            ]:
+                old.unlink()
         shots = save_screenshots(client, api, run, args.site)
+        videos = save_videos(captures, args.site)
+        if frames_root:
+            shutil.rmtree(frames_root, ignore_errors=True)
         classes = [a["diagnosis"]["failure_class"] for a in run["attempts"] if a.get("diagnosis")]
-        print(f"\nwrote {out.relative_to(REPO)} ({len(lines)} events, {shots} screenshots)")
+        print(
+            f"\nwrote {out.relative_to(REPO)} ({len(lines)} events, "
+            f"{shots} screenshots, {videos} videos)"
+        )
         print(
             f"classes: {' -> '.join(classes) or 'none'}; verdict: {run['status']}; "
             f"credits: {run['credits_used']} (expected class: {site.get('expected_class')})"

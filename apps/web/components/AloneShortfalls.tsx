@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import AloneComparison from "@/components/AloneComparison";
-import AloneVsAskYoda from "@/components/diagrams/AloneVsAskYoda";
 import {
   aloneFailed,
   demoRunId,
@@ -51,13 +50,13 @@ export default function AloneShortfalls() {
           judged by the same verifier.
         </p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className={`grid gap-4 md:grid-cols-2 ${runs.length >= 3 ? "xl:grid-cols-3" : ""}`}>
         {runs.map((run) => {
           const cls = run.alone?.failure_class ?? run.expected_class ?? null;
           return (
             <article
               key={run.id}
-              className="flex flex-col gap-4 rounded-2xl border border-ink-700 bg-ink-900/80 p-6 transition-colors hover:border-ink-500"
+              className="grid grid-rows-[auto_auto_1fr_auto_auto] gap-4 rounded-2xl border border-ink-700 bg-ink-900/80 p-6 transition-colors hover:border-ink-500"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="kicker">
@@ -70,18 +69,11 @@ export default function AloneShortfalls() {
                 )}
               </div>
               <h3 className="font-display text-2xl leading-tight text-ink-50">{run.title}</h3>
-              {run.goal && <p className="text-sm text-ink-300">“{run.goal}”</p>}
-              <AloneVsAskYoda
-                aloneOutcome={run.alone?.verify_summary ?? "failed the check"}
-                alonePassed={run.alone?.passed ?? false}
-                askyodaOutcome={
-                  run.status === "verified" ? `verified · ${run.credits_used} cr` : "stopped"
-                }
-                askyodaPassed={run.status === "verified"}
-                attempts={run.attempts_used}
-              />
+              <p className="text-sm leading-relaxed text-ink-300">
+                {run.goal ? `“${run.goal}”` : ""}
+              </p>
               <AloneComparison run={run} />
-              <div className="mt-auto border-t border-ink-700/70 pt-4">
+              <div className="border-t border-ink-700/70 pt-4">
                 <Link href={`/runs/${demoRunId(run.id)}`} className="btn-primary px-4 py-2 text-sm">
                   Watch the AskYoda run ▸
                 </Link>

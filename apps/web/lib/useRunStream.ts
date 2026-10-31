@@ -3,6 +3,7 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { parseDemoUrl, playDemo } from "./demoSource";
 import { initialRunViewState, reduceRun, type RunViewState } from "./runState";
 import type { UiEvent } from "./types";
+import type { PlaybackGate } from "./videoClock";
 
 export interface RunStream {
   state: RunViewState;
@@ -37,7 +38,7 @@ function withAfter(url: string, after: number): string {
  * example when Next.js hides and re-shows the route), the new connection resumes with
  * `?after=<lastSeq>`; the reducer drops anything already seen either way.
  */
-export function useRunStream(url: string | null): RunStream {
+export function useRunStream(url: string | null, gate?: PlaybackGate): RunStream {
   const [stream, dispatch] = useReducer(reduceStream, initialStreamState);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +63,7 @@ export function useRunStream(url: string | null): RunStream {
         {
           speed: demo.speed,
           after: progress.current.lastSeq,
+          gate,
           onStart: () => {
             setConnected(true);
             setError(null);
@@ -107,7 +109,7 @@ export function useRunStream(url: string | null): RunStream {
     };
 
     return () => es.close();
-  }, [url]);
+  }, [url, gate]);
 
   return { state: stream.view, events: stream.events, connected, error };
 }

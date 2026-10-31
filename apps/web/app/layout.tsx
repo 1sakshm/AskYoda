@@ -52,7 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Notice>Live demo · real TinyFish runs · shared budget, one run at a time</Notice>
         )}
         <header className="sticky top-0 z-20 border-b border-ink-800/80 bg-ink-950/75 backdrop-blur-md">
-          <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between gap-6 px-5 py-3 sm:px-8">
+          <div className="mx-auto flex w-full max-w-[1400px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 py-3 sm:px-8">
             <Link href="/" className="group flex items-center gap-3">
               <Logo />
               <span className="font-display text-2xl leading-none tracking-tight text-ink-50">

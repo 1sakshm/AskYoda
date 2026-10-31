@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import RunView from "@/components/RunView";
 import {
@@ -9,13 +9,16 @@ import {
   demoRunId,
   demoScreenshotUrl,
   demoStreamUrl,
+  demoVideoUrl,
   loadDemoIndex,
+  loadVideoTimings,
   type DemoRun,
 } from "@/lib/demoIndex";
+import { videoGate, type VideoTiming } from "@/lib/videoClock";
 
 type LoadState =
   | { kind: "loading" }
-  | { kind: "ready"; run: DemoRun }
+  | { kind: "ready"; run: DemoRun; timings: Map<number, VideoTiming> }
   | { kind: "missing" }
   | { kind: "error"; message: string };
 
@@ -34,10 +37,11 @@ export default function DemoRunLoader({ demoId }: { demoId: string }) {
   useEffect(() => {
     let cancelled = false;
     loadDemoIndex()
-      .then((index) => {
-        if (cancelled) return;
+      .then(async (index) => {
         const run = index.runs.find((r) => r.id === demoId);
-        setLoad(run ? { kind: "ready", run } : { kind: "missing" });
+        const timings = run ? await loadVideoTimings(run) : new Map<number, VideoTiming>();
+        if (cancelled) return;
+        setLoad(run ? { kind: "ready", run, timings } : { kind: "missing" });
       })
       .catch((err: unknown) => {
         if (!cancelled) setLoad({ kind: "error", message: String(err) });
@@ -46,6 +50,16 @@ export default function DemoRunLoader({ demoId }: { demoId: string }) {
       cancelled = true;
     };
   }, [demoId]);
+
+  const ready = load.kind === "ready" ? load : null;
+  // One stable gate per run: the playback effect restarts when it changes.
+  const gate = useMemo(
+    () =>
+      ready && ready.timings.size > 0
+        ? videoGate(demoRunId(ready.run.id), ready.timings)
+        : undefined,
+    [ready],
+  );
 
   if (load.kind === "loading") return <p className="animate-pulse text-ink-400">Loading run…</p>;
   if (load.kind === "missing") {
@@ -80,6 +94,8 @@ export default function DemoRunLoader({ demoId }: { demoId: string }) {
       screenshotSrc={(n) =>
         run.screenshot_attempts.includes(n) ? demoScreenshotUrl(run.id, n) : null
       }
+      videoSrc={(n) => ((run.video_attempts ?? []).includes(n) ? demoVideoUrl(run.id, n) : null)}
+      gate={gate}
     />
   );
 }

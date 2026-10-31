@@ -1,0 +1,6 @@
+{
+  "title": "JavaScript-rendered quotes",
+  "summary": "quotes.toscrape.com/js renders each page of quotes with JavaScript, 10 per page. TinyFish alone read page 1 and stopped at 10 quotes; the check needs 30. AskYoda caught the short answer and the retry paged on: 40 quotes, verified on attempt 2.",
+  "kind": "real",
+  "expected_class": "misread_page"
+}

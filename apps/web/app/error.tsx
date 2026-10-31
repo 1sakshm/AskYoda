@@ -20,8 +20,8 @@ export default function AppError({ error, retry }: { error: unknown; retry: () =
         <button type="button" onClick={() => retry()} className="btn-primary">
           Try again
         </button>
-        <Link href="/dev" className="btn-ghost">
-          Open the sample run
+        <Link href="/recordings" className="btn-ghost">
+          Recorded runs
         </Link>
       </div>
     </main>

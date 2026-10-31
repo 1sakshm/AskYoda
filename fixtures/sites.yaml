@@ -232,6 +232,161 @@ sites:
       -> agent clicked 2015 in 4 steps -> verified, 4 credits, 27 s. Backup:
       https://quotes.toscrape.com/search.aspx
 
+  - id: rw-quotes-scroll
+    kind: real
+    title: Quotes behind infinite scroll
+    summary: >-
+      quotes.toscrape.com/scroll loads 10 quotes at a time as you scroll. One plain TinyFish run
+      returned the first 10 and said COMPLETED; the check needs 30. AskYoda diagnosed it and kept
+      patching until the run scrolled for more: 30 quotes, verified on attempt 4.
+    cost_hint: about 12 credits
+    url: https://quotes.toscrape.com/scroll
+    goal: List the quotes on this page with their authors.
+    expected:
+      type: min_items
+      path: quotes
+      min: 30
+    output_schema:
+      type: object
+      properties:
+        quotes:
+          type: array
+          items:
+            type: object
+            properties:
+              text: {type: string}
+              author: {type: string}
+            required: [text, author]
+      required: [quotes]
+    expected_class: misread_page
+    start_rung: agent
+    notes: >-
+      Real site, recorded 2026-10-31 (TinyFish alone failed the check; AskYoda verified).
+
+  - id: rw-quotes-js
+    kind: real
+    title: JavaScript-rendered quotes
+    summary: >-
+      quotes.toscrape.com/js renders each page of quotes with JavaScript, 10 per page. TinyFish
+      alone read page 1 and stopped at 10 quotes; the check needs 30. AskYoda caught the short
+      answer and the retry paged on: 40 quotes, verified on attempt 2.
+    cost_hint: about 12 credits
+    url: https://quotes.toscrape.com/js/
+    goal: List the quotes on this site with their authors.
+    expected:
+      type: min_items
+      path: quotes
+      min: 30
+    output_schema:
+      type: object
+      properties:
+        quotes:
+          type: array
+          items:
+            type: object
+            properties:
+              text: {type: string}
+              author: {type: string}
+            required: [text, author]
+      required: [quotes]
+    expected_class: misread_page
+    start_rung: agent
+    notes: >-
+      Real site, recorded 2026-10-31 (TinyFish alone failed the check; AskYoda verified).
+
+  - id: rw-books
+    kind: real
+    title: Bookshop catalogue
+    summary: >-
+      books.toscrape.com lists 20 books per page across 50 pages. One plain TinyFish run spent 12
+      credits and came back with an empty list; the check needs 40. AskYoda diagnosed each failure
+      and patched the next attempt: 40 books, verified on attempt 4.
+    cost_hint: about 17 credits
+    url: https://books.toscrape.com/
+    goal: List the books in this shop's catalogue with their prices.
+    expected:
+      type: min_items
+      path: books
+      min: 40
+    output_schema:
+      type: object
+      properties:
+        books:
+          type: array
+          items:
+            type: object
+            properties:
+              title: {type: string}
+              price: {type: string}
+            required: [title, price]
+      required: [books]
+    expected_class: misread_page
+    start_rung: agent
+    notes: >-
+      Real site, recorded 2026-10-31 (TinyFish alone failed the check; AskYoda verified).
+
+  - id: rw-laptops-more
+    kind: real
+    title: Laptops behind 'More'
+    summary: >-
+      webscraper.io's test shop shows 6 laptops and a 'More' button. TinyFish alone used 15
+      credits and returned an empty list; the check needs 20. AskYoda diagnosed a misread and the
+      retry pressed 'More': 30 laptops, verified on attempt 2.
+    cost_hint: about 8 credits
+    url: https://webscraper.io/test-sites/e-commerce/more/computers/laptops
+    goal: List the laptops in this shop with their prices.
+    expected:
+      type: min_items
+      path: laptops
+      min: 20
+    output_schema:
+      type: object
+      properties:
+        laptops:
+          type: array
+          items:
+            type: object
+            properties:
+              name: {type: string}
+              price: {type: string}
+            required: [name, price]
+      required: [laptops]
+    expected_class: misread_page
+    start_rung: agent
+    notes: >-
+      Real site, recorded 2026-10-31 (TinyFish alone failed the check; AskYoda verified).
+
+  - id: rw-laptops-scroll
+    kind: real
+    title: Laptops behind infinite scroll
+    summary: >-
+      webscraper.io's infinite-scroll laptop shop loads more as you scroll. TinyFish alone
+      returned an empty list; the check needs 20. AskYoda patched twice and escalated to the
+      stealth browser: 24 laptops, verified on attempt 3.
+    cost_hint: about 29 credits
+    url: https://webscraper.io/test-sites/e-commerce/scroll/computers/laptops
+    goal: List the laptops in this shop with their prices.
+    expected:
+      type: min_items
+      path: laptops
+      min: 20
+    output_schema:
+      type: object
+      properties:
+        laptops:
+          type: array
+          items:
+            type: object
+            properties:
+              name: {type: string}
+              price: {type: string}
+            required: [name, price]
+      required: [laptops]
+    expected_class: misread_page
+    start_rung: agent
+    notes: >-
+      Real site, recorded 2026-10-31 (TinyFish alone failed the check; AskYoda verified).
+
   - id: TODO-popup-overlay
     url: TODO
     goal: TODO

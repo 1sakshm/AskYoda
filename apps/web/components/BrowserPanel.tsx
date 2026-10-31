@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { latestScreenshotUrl, screenshotUrl } from "@/lib/api";
 import type { AttemptView, RunViewState } from "@/lib/runState";
 import type { RunMode } from "@/lib/types";
+import { VIDEO_RATE, registerVideo, videoKey } from "@/lib/videoClock";
 
 interface Props {
   liveView: RunViewState["liveView"];
@@ -16,6 +17,8 @@ interface Props {
    * overlay without a request). Defaults to the API endpoint.
    */
   screenshotSrc?: (attemptNo: number) => string | null;
+  /** A recorded video of TinyFish's browser for an attempt (bundled recordings), else null. */
+  videoSrc?: (attemptNo: number) => string | null;
 }
 
 /** "Step k — label" for the attempt's failing step, else the verifier summary. */
@@ -181,7 +184,81 @@ function RecordedShot({ src, caption }: { src: string; caption: string }) {
   );
 }
 
-export default function BrowserPanel({ liveView, attempt, mode, runId, screenshotSrc }: Props) {
+/**
+ * The recorded video of TinyFish's browser for one attempt. It plays as soon as the attempt
+ * starts, faster than real time, and holds its last frame afterwards. The run's timeline waits
+ * on it (lib/videoClock.ts), so steps appear as the video reaches them.
+ */
+function ReplayVideo({
+  src,
+  poster,
+  regKey,
+  caption,
+  failing,
+}: {
+  src: string;
+  poster: string | null;
+  regKey: string;
+  caption: string | null;
+  failing: boolean;
+}) {
+  const ref = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    registerVideo(regKey, el);
+    if (el) {
+      // React doesn't render the `muted` attribute; autoplay needs the element muted first.
+      el.muted = true;
+      el.defaultMuted = true;
+      el.playbackRate = VIDEO_RATE;
+      void el.play().catch(() => {});
+    }
+    return () => registerVideo(regKey, null);
+  }, [regKey]);
+
+  const keepRate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    e.currentTarget.playbackRate = VIDEO_RATE;
+  };
+  return (
+    <Frame>
+      <video
+        ref={ref}
+        src={src}
+        poster={poster ?? undefined}
+        autoPlay
+        muted
+        playsInline
+        preload="auto"
+        onLoadedMetadata={keepRate}
+        onPlay={keepRate}
+        className="h-full w-full object-contain"
+        aria-label="Recorded video of the agent's browser"
+      />
+      <span className="absolute right-3 top-3 rounded-full border border-ink-600 bg-ink-950/80 px-2.5 py-0.5 font-mono text-[11px] text-ink-200">
+        recorded · {VIDEO_RATE}× speed
+      </span>
+      {caption && (
+        <p
+          className={`absolute inset-x-0 bottom-0 border-t bg-ink-950/90 px-4 py-2.5 text-sm ${
+            failing ? "border-ember-500/50 text-ember-200" : "border-ink-700 text-ink-200"
+          }`}
+        >
+          {caption}
+        </p>
+      )}
+    </Frame>
+  );
+}
+
+export default function BrowserPanel({
+  liveView,
+  attempt,
+  mode,
+  runId,
+  screenshotSrc,
+  videoSrc,
+}: Props) {
   if (!attempt) {
     return (
       <Frame>
@@ -202,6 +279,27 @@ export default function BrowserPanel({ liveView, attempt, mode, runId, screensho
   }
 
   const view = liveView && liveView.attemptNo === attempt.attemptNo ? liveView : null;
+
+  // A bundled recording with a video of this attempt: play it from the start of the attempt.
+  const video = mode === "replay" && videoSrc ? videoSrc(attempt.attemptNo) : null;
+  if (video) {
+    const failing = Boolean(attempt.diagnosis);
+    const caption = failing
+      ? failingCaption(attempt)
+      : attempt.status === "running"
+        ? null
+        : (attempt.verify?.summary ?? null);
+    return (
+      <ReplayVideo
+        key={`${runId}:${attempt.attemptNo}`}
+        src={video}
+        poster={screenshotSrc ? screenshotSrc(attempt.attemptNo) : null}
+        regKey={videoKey(runId, attempt.attemptNo)}
+        caption={caption}
+        failing={failing}
+      />
+    );
+  }
 
   // A bundled recording with a screenshot of this attempt: show it while the attempt plays and
   // after it, instead of a missing live view. Diagnosed attempts keep the failing-step view.

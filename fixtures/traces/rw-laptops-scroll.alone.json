@@ -1,0 +1,12 @@
+{
+  "site_id": "rw-laptops-scroll",
+  "tinyfish_status": "COMPLETED",
+  "passed": false,
+  "verify_summary": "Rejected: laptops has 0 items, need 20",
+  "failure_class": "popup_overlay",
+  "result": {
+    "laptops": []
+  },
+  "credits": 9,
+  "recorded_at": "2026-10-31T08:58:32.508961Z"
+}
