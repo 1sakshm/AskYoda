@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import RunView from "@/components/RunView";
 import { ApiError, cancelRun, createRun, getRun, getSites, streamUrl } from "@/lib/api";
 import { apiErrorMessages } from "@/lib/runRequest";
-import type { Run } from "@/lib/types";
+import type { Run, SiteInfo } from "@/lib/types";
 
 type LoadState =
   | { kind: "loading" }
@@ -16,13 +16,8 @@ type LoadState =
   | { kind: "error"; message: string };
 
 /** Does the run's demo site have a recorded trace to fall back to? */
-async function siteHasTrace(siteId: string | null): Promise<boolean> {
-  if (!siteId) return false;
-  try {
-    return (await getSites()).some((s) => s.id === siteId && s.has_trace);
-  } catch {
-    return false;
-  }
+function siteHasTrace(sites: SiteInfo[], siteId: string | null): boolean {
+  return !!siteId && sites.some((s) => s.id === siteId && s.has_trace);
 }
 
 export default function RunLoader({ runId }: { runId: string }) {
@@ -31,9 +26,11 @@ export default function RunLoader({ runId }: { runId: string }) {
 
   useEffect(() => {
     let cancelled = false;
+    // Both at once: a live run only starts once the stream opens, so every round trip counts.
+    const sites = getSites().catch((): SiteInfo[] => []);
     getRun(runId)
       .then(async (run) => {
-        const hasTrace = run.mode === "live" ? await siteHasTrace(run.request.site_id) : false;
+        const hasTrace = run.mode === "live" && siteHasTrace(await sites, run.request.site_id);
         if (!cancelled) setLoad({ kind: "ready", run, hasTrace });
       })
       .catch((err: unknown) => {

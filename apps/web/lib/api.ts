@@ -72,3 +72,7 @@ export const sampleStreamUrl = `${API_BASE}/dev/sample-stream`;
 
 export const screenshotUrl = (id: string, attemptNo: number) =>
   `${API_BASE}/runs/${enc(id)}/attempts/${attemptNo}/screenshot`;
+
+/** The attempt's newest step screenshot; `v` busts the browser cache on every new step. */
+export const latestScreenshotUrl = (id: string, attemptNo: number, v: number) =>
+  `${API_BASE}/runs/${enc(id)}/attempts/${attemptNo}/latest-screenshot?v=${v}`;

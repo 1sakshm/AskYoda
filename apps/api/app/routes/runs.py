@@ -319,6 +319,39 @@ async def failing_step_screenshot(run_id: str, attempt_no: int, svc: ServicesDep
     return Response(content=content, media_type="image/jpeg", headers=SCREENSHOT_HEADERS)
 
 
+@router.get("/runs/{run_id}/attempts/{attempt_no}/latest-screenshot")
+async def latest_step_screenshot(run_id: str, attempt_no: int, svc: ServicesDep) -> Response:
+    """The newest step screenshot of an agent attempt, while it runs or after it ends.
+
+    TinyFish's live viewer can take longer to connect than a short run lasts, so the run view
+    shows these (refreshed on every step) until the stream is up. 404 until the first step.
+    """
+    run = await db.get_run(run_id)
+    if run is None or run.mode is RunMode.replay or svc.tinyfish is None:
+        raise HTTPException(status_code=404, detail="no live screenshots for this run")
+    attempt = next((a for a in run.attempts if a.attempt_no == attempt_no), None)
+    tf_run_id = attempt.tf_run_id if attempt else None
+    if not tf_run_id:  # the attempt is saved at its end; its trace has the id from the start
+        events = await db.list_trace_events(run_id, attempt_no)
+        tf_run_id = next((e.tf_run_id for e in events if e.tf_run_id), None)
+    if not tf_run_id:
+        raise HTTPException(status_code=404, detail="the attempt has no TinyFish run yet")
+    try:
+        steps = (await svc.tinyfish.get_run(tf_run_id)).get("steps") or []
+        # The last step ("Task completed") often has no screenshot: try the newest few.
+        for step in [s for s in reversed(steps) if s.get("id")][:3]:
+            try:
+                content = await svc.tinyfish.step_screenshot(tf_run_id, str(step["id"]))
+            except TinyFishError:
+                continue
+            return Response(
+                content=content, media_type="image/jpeg", headers={"Cache-Control": "no-store"}
+            )
+    except (TinyFishError, httpx.HTTPError) as e:
+        raise HTTPException(status_code=404, detail="screenshot unavailable") from e
+    raise HTTPException(status_code=404, detail="no step screenshot yet")
+
+
 @router.post("/runs/{run_id}/cancel", status_code=202)
 async def cancel_run(run_id: str, svc: ServicesDep) -> dict[str, str]:
     """Stop a queued or running run (used by "Switch to replay"). Idempotent while running."""

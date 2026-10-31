@@ -80,3 +80,33 @@ async def test_endpoint_serves_the_failing_step_jpeg(temp_db, monkeypatch):
     assert ok.headers["content-type"] == "image/jpeg"
     assert ok.content == b"\xff\xd8fake-jpeg"
     assert missing.status_code == 404
+
+
+async def test_latest_screenshot_serves_the_newest_step(temp_db, monkeypatch):
+    async def instant(_s):
+        return None
+
+    monkeypatch.setattr("app.ladder.controller.asyncio.sleep", instant)
+    fake = FakeTinyFish(
+        streams=[sse_run("tf_1", ["Opening", "Reading the list"])],
+        runs={"tf_1": run_record("tf_1", 2)},
+    )
+    asked: list[str] = []
+    original = fake.step_screenshot
+
+    async def recording(tf_run_id: str, step_id: str) -> bytes:
+        asked.append(step_id)
+        return await original(tf_run_id, step_id)
+
+    fake.step_screenshot = recording
+    app = create_app(Settings(_env_file=None, max_attempts=1), tinyfish=fake, claude=None)
+    body = {"url": "https://shop.example.com", "goal": "List products", "start_rung": "agent"}
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        run_id = (await c.post("/runs", json=body)).json()["run_id"]
+        await c.get(f"/runs/{run_id}/stream")
+        ok = await c.get(f"/runs/{run_id}/attempts/1/latest-screenshot")
+        missing = await c.get(f"/runs/{run_id}/attempts/9/latest-screenshot")
+    assert ok.status_code == 200 and ok.content == b"\xff\xd8fake-jpeg"
+    assert ok.headers["cache-control"] == "no-store"
+    assert asked == ["tf_1-s2"]
+    assert missing.status_code == 404
