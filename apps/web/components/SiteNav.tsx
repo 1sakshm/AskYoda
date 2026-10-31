@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 
 const NAV = [
+  { href: "/package", label: "npm package" },
   { href: "/cases", label: "Prepared cases" },
   { href: "/real", label: "Real websites" },
   { href: "/recordings", label: "Recorded runs" },
