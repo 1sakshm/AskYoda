@@ -5,29 +5,100 @@ import RunForm from "@/components/RunForm";
 import ScenarioCards from "@/components/ScenarioCards";
 import { DEMO_MODE } from "@/lib/api";
 
-const INTRO =
-  "A reliability layer for TinyFish web agents: it runs your goal, checks the answer itself, " +
-  "names what went wrong and at which step, fixes it, and stops honestly when a fix is impossible.";
+function Hero() {
+  return (
+    <section className="animate-rise grid gap-10 pb-4 lg:grid-cols-[1.35fr_1fr] lg:items-end">
+      <div>
+        <p className="kicker">A reliability layer for TinyFish web agents</p>
+        <h1 className="mt-5 font-display text-5xl leading-[1.02] tracking-tight text-ink-50 sm:text-7xl">
+          Your agent said <em className="text-moss-300">done.</em>
+          <br />
+          We check.
+        </h1>
+        <p className="mt-6 max-w-xl text-lg leading-relaxed text-ink-300">
+          AskYoda runs your goal, verifies the answer itself, names what went wrong and at which
+          step, patches the next attempt — and stops honestly when a fix is impossible.
+        </p>
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          <a href="#scenarios" className="btn-primary">
+            Run a prepared case
+            <span aria-hidden>→</span>
+          </a>
+          <a href="#custom" className="btn-ghost">
+            Bring your own URL
+          </a>
+        </div>
+      </div>
+      <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-ink-700 bg-ink-700 text-center lg:grid-cols-1 lg:text-left">
+        {[
+          ["6", "failure classes diagnosed"],
+          ["3", "rungs, cheapest first"],
+          ["0", "credits when Fetch is enough"],
+        ].map(([n, label]) => (
+          <div key={label} className="bg-ink-900 px-5 py-5 lg:flex lg:items-baseline lg:gap-5">
+            <dt className="font-display text-4xl text-ink-50 lg:w-12">{n}</dt>
+            <dd className="mt-1 text-sm text-ink-300 lg:mt-0">{label}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+const TIPS = [
+  ["Be specific", "“List the first 3 products with name and price” beats “get the products”."],
+  [
+    "Add a check",
+    "A text the answer must contain lets the verifier catch a wrong — not just an empty — answer.",
+  ],
+  ["Start cheap", "Leave the start rung on Fetch: it costs nothing and escalates on its own."],
+  ["Expect honesty", "Login walls and captchas stop at once instead of burning credits."],
+];
+
+function FormTips() {
+  return (
+    <aside className="space-y-5 lg:pt-2">
+      <p className="kicker">Getting a good run</p>
+      <ul className="space-y-5">
+        {TIPS.map(([title, body]) => (
+          <li key={title} className="border-l border-ink-700 pl-4">
+            <p className="font-medium text-ink-50">{title}</p>
+            <p className="mt-1 text-sm leading-relaxed text-ink-400">{body}</p>
+          </li>
+        ))}
+      </ul>
+    </aside>
+  );
+}
+
+function SectionHead({ kicker, title, body }: { kicker: string; title: string; body?: string }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <p className="kicker">{kicker}</p>
+        <h2 className="mt-2 font-display text-4xl tracking-tight text-ink-50">{title}</h2>
+      </div>
+      {body && <p className="max-w-md text-ink-300">{body}</p>}
+    </div>
+  );
+}
 
 export default function Home() {
   if (DEMO_MODE) {
     return (
-      <main className="space-y-8">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold">AskYoda</h1>
-          <p className="max-w-4xl text-lg text-slate-300">{INTRO}</p>
-        </div>
+      <main className="space-y-20">
+        <Hero />
         <HowItWorks />
-        <section className="space-y-3">
-          <h2 className="text-2xl font-semibold">Bundled runs</h2>
-          <p className="text-slate-400">
-            Each one replays a full run in your browser: the ladder, every step, the verifier, the
-            diagnosis with its red failing step, and the verdict.
-          </p>
+        <section className="space-y-6">
+          <SectionHead
+            kicker="Recorded"
+            title="Bundled runs"
+            body="Each one replays a full run in your browser: the ladder, every step, the verifier, the diagnosis and the verdict."
+          />
           <DemoRunPicker />
         </section>
-        <section className="space-y-3">
-          <h2 className="text-2xl font-semibold">Run your own</h2>
+        <section id="custom" className="scroll-mt-24 space-y-6">
+          <SectionHead kicker="Custom" title="Run your own" />
           <RunForm disabledNote="Live runs need the API, which isn't part of this demo deployment." />
         </section>
       </main>
@@ -35,30 +106,30 @@ export default function Home() {
   }
 
   return (
-    <main className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Run an autopsy</h1>
-        <p className="text-slate-400">
-          Start a prepared autopsy with one click, or paste any URL with a goal. We climb Fetch →
-          Agent → Agent + stealth, verify every answer ourselves, and diagnose every failure.
-        </p>
-      </div>
+    <main className="space-y-20">
+      <Hero />
       <LiveBudget />
       <ScenarioCards />
-      <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">Or build your own</h2>
-        <RunForm />
-      </section>
-      <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">Or watch a recorded run</h2>
-        <p className="text-slate-400">
-          These play in your browser from files bundled with the site, so they cost nothing: no
-          TinyFish credits, no Claude calls. Each shows the ladder, every step, the verifier, the
-          diagnosis with its red failing step, and the verdict.
-        </p>
-        <DemoRunPicker />
+      <section id="custom" className="scroll-mt-24 space-y-6">
+        <SectionHead
+          kicker="Custom"
+          title="Bring your own URL"
+          body="Any public page and a plain-English goal. Add a check so the verifier knows what a right answer looks like."
+        />
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <RunForm />
+          <FormTips />
+        </div>
       </section>
       <HowItWorks />
+      <section className="space-y-6">
+        <SectionHead
+          kicker="Free to watch"
+          title="Recorded runs"
+          body="Played in your browser from files bundled with the site — no credits, no API calls."
+        />
+        <DemoRunPicker />
+      </section>
     </main>
   );
 }

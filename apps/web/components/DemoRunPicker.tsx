@@ -15,57 +15,50 @@ import { CLASS_COLOR, CLASS_LABEL, STATUS_LABEL, STATUS_STYLE, fmtCredits } from
 function RunCard({ run }: { run: DemoRun }) {
   const sample = run.kind === "sample";
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-slate-700 bg-slate-900/60 p-5">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span
-          className={`rounded-full px-2.5 py-0.5 font-semibold ring-1 ${
-            sample
-              ? "bg-violet-500/15 text-violet-200 ring-violet-400/40"
-              : "bg-amber-500/15 text-amber-200 ring-amber-400/40"
-          }`}
-        >
-          {sample ? "Illustrative sample" : "Recording"}
-        </span>
+    <article className="flex flex-col gap-4 rounded-2xl border border-ink-700 bg-ink-900/80 p-6 transition-colors hover:border-ink-500">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="kicker">{sample ? "Illustrative sample" : "Recording"}</span>
         {run.status && (
-          <span className={`font-semibold ${STATUS_STYLE[run.status]}`}>
+          <span className={`font-mono text-xs tracking-wide ${STATUS_STYLE[run.status]}`}>
             {STATUS_LABEL[run.status]}
           </span>
         )}
       </div>
-      <h3 className="text-xl font-semibold text-slate-50">{run.title}</h3>
+      <h3 className="font-display text-2xl leading-tight text-ink-50">{run.title}</h3>
       {sample && (
-        <p className="rounded border border-violet-400/40 bg-violet-950/40 px-2 py-1 text-sm text-violet-100">
+        <p className="rounded-lg border border-ochre-800/60 bg-ochre-950/60 px-3 py-2 text-sm text-ochre-200">
           {SAMPLE_NOTE}
         </p>
       )}
       {run.url && (
-        <p className="truncate font-mono text-sm text-slate-400" title={run.url}>
+        <p className="truncate font-mono text-xs text-ink-400" title={run.url}>
           {run.url}
         </p>
       )}
-      {run.goal && <p className="text-slate-200">{run.goal}</p>}
+      {run.goal && <p className="text-ink-200">{run.goal}</p>}
       {run.classes.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 text-sm">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
           {run.classes.map((c, i) => (
             <span key={`${c}-${i}`} className="flex items-center gap-1.5">
-              {i > 0 && <span className="text-slate-400">→</span>}
-              <span className={`rounded px-2 py-0.5 ${CLASS_COLOR[c]}`}>{CLASS_LABEL[c]}</span>
+              {i > 0 && <span className="text-ink-500">→</span>}
+              <span className={`rounded-full px-2.5 py-0.5 ${CLASS_COLOR[c]}`}>
+                {CLASS_LABEL[c]}
+              </span>
             </span>
           ))}
         </div>
       )}
-      <p className="text-sm text-slate-400">
-        {run.attempts_used} attempt{run.attempts_used === 1 ? "" : "s"} ·{" "}
-        {fmtCredits(run.credits_used)}
-        {run.baseline_credits_estimate !== null &&
-          ` · naive baseline ${fmtCredits(run.baseline_credits_estimate)}`}
-      </p>
-      <Link
-        href={`/runs/${demoRunId(run.id)}`}
-        className="mt-auto self-start rounded-md bg-sky-600 px-6 py-3 text-lg font-semibold text-white hover:bg-sky-500"
-      >
-        ▶ Play
-      </Link>
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-ink-700/70 pt-4">
+        <p className="font-mono text-xs text-ink-400">
+          {run.attempts_used} attempt{run.attempts_used === 1 ? "" : "s"} ·{" "}
+          {fmtCredits(run.credits_used)}
+          {run.baseline_credits_estimate !== null &&
+            ` · baseline ${fmtCredits(run.baseline_credits_estimate)}`}
+        </p>
+        <Link href={`/runs/${demoRunId(run.id)}`} className="btn-ghost px-4 py-1.5 text-sm">
+          Play ▸
+        </Link>
+      </div>
     </article>
   );
 }
@@ -89,11 +82,17 @@ export default function DemoRunPicker() {
     };
   }, []);
 
-  if (error) return <p className="text-rose-300">Can&apos;t load the bundled runs: {error}</p>;
-  if (!runs) return <p className="animate-pulse text-slate-400">Loading bundled runs…</p>;
-  if (runs.length === 0) return <p className="text-slate-400">No runs are bundled yet.</p>;
+  if (error) return <p className="text-ember-300">Can&apos;t load the bundled runs: {error}</p>;
+  if (!runs) return <p className="animate-pulse text-ink-400">Loading bundled runs…</p>;
+  if (runs.length === 0) {
+    return (
+      <p className="rounded-2xl border border-dashed border-ink-700 px-6 py-10 text-center text-ink-400">
+        No recorded runs are bundled yet.
+      </p>
+    );
+  }
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {runs.map((run) => (
         <RunCard key={run.id} run={run} />
       ))}

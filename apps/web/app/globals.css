@@ -3,59 +3,239 @@
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-instrument-serif);
 }
 
+/*
+ * AskYoda palette: warm ink neutrals, a moss accent, ochre for caution and ember for failure.
+ * Deliberately no blue, cyan or purple anywhere (and no slate/gray, which lean blue).
+ */
 @theme {
+  --color-ink-950: #0b0a08;
+  --color-ink-900: #11100d;
+  --color-ink-850: #161511;
+  --color-ink-800: #1c1a16;
+  --color-ink-750: #23211c;
+  --color-ink-700: #2c2923;
+  --color-ink-600: #3b372f;
+  --color-ink-500: #59544a;
+  --color-ink-400: #7d776a;
+  --color-ink-300: #a59e8f;
+  --color-ink-200: #cbc4b5;
+  --color-ink-100: #e7e1d5;
+  --color-ink-50: #f5f0e7;
+
+  --color-moss-200: #e4edb0;
+  --color-moss-300: #d3e18b;
+  --color-moss-400: #bfd166;
+  --color-moss-500: #a3b74a;
+  --color-moss-600: #7f9234;
+  --color-moss-800: #3a4319;
+  --color-moss-900: #252b10;
+  --color-moss-950: #171a0a;
+
+  --color-ochre-200: #f4dca2;
+  --color-ochre-300: #ecc66b;
+  --color-ochre-400: #e2ae3d;
+  --color-ochre-500: #c4912a;
+  --color-ochre-800: #4a3610;
+  --color-ochre-900: #2f220a;
+  --color-ochre-950: #1e1606;
+
+  --color-ember-200: #f6c0b4;
+  --color-ember-300: #f09179;
+  --color-ember-400: #e8664e;
+  --color-ember-500: #cf4a33;
+  --color-ember-800: #55200f;
+  --color-ember-900: #36150b;
+  --color-ember-950: #220d07;
+
+  /* Extra failure-class hues, all warm. */
+  --color-tangerine-300: #f2ab6d;
+  --color-khaki-300: #d2c98d;
+  --color-clay-300: #e3a394;
+
   /* A failing step flashes twice (2 s) when its diagnosis arrives. */
   --animate-fail-flash: fail-flash 1s ease-in-out 2;
   /* A rung that just became active glows once (1.5 s). */
   --animate-rung-flash: rung-flash 1.5s ease-out 1;
+  --animate-rise: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 
   @keyframes rung-flash {
     0% {
-      box-shadow: 0 0 0 0 rgb(56 189 248 / 0.7);
+      box-shadow: 0 0 0 0 rgb(191 209 102 / 0.55);
     }
     40% {
-      box-shadow: 0 0 0 10px rgb(56 189 248 / 0.25);
+      box-shadow: 0 0 0 8px rgb(191 209 102 / 0.18);
     }
     100% {
-      box-shadow: 0 0 0 0 rgb(56 189 248 / 0);
+      box-shadow: 0 0 0 0 rgb(191 209 102 / 0);
     }
   }
 
   @keyframes fail-flash {
     0%,
     100% {
-      background-color: var(--color-rose-950);
+      background-color: var(--color-ember-950);
     }
     50% {
-      background-color: var(--color-rose-700);
+      background-color: var(--color-ember-800);
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
     }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-fail-flash,
-  .animate-rung-flash {
+  .animate-rung-flash,
+  .animate-rise {
     animation: none;
   }
 }
 
-/* Dark, projector-friendly base. */
 html {
-  font-size: 17px;
+  font-size: 16px;
   color-scheme: dark;
 }
 
-/* Projectors at 1600 px and wider get an 18 px base (every rem-based size scales with it). */
 @media (min-width: 1600px) {
   html {
-    font-size: 18px;
+    font-size: 17px;
   }
 }
 
 body {
-  background: var(--color-slate-950);
-  color: var(--color-slate-100);
+  background-color: var(--color-ink-950);
+  color: var(--color-ink-100);
   font-family: var(--font-sans), system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  /* A faint warm glow at the top and a hairline grid: depth without colour. */
+  background-image:
+    radial-gradient(1200px 520px at 15% -10%, rgb(191 209 102 / 0.07), transparent 60%),
+    linear-gradient(to right, rgb(245 240 231 / 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(245 240 231 / 0.025) 1px, transparent 1px);
+  background-size:
+    auto,
+    64px 64px,
+    64px 64px;
+  background-attachment: fixed;
+}
+
+::selection {
+  background: var(--color-moss-400);
+  color: var(--color-ink-950);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-moss-400);
+  outline-offset: 2px;
+}
+
+/* Thin, warm scrollbars for the trace and code panes. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-ink-600) transparent;
+}
+
+@layer components {
+  .kicker {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ink-400);
+  }
+
+  .panel {
+    border: 1px solid var(--color-ink-700);
+    background-color: rgb(22 21 17 / 0.82);
+    border-radius: 0.875rem;
+    backdrop-filter: blur(6px);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    background-color: var(--color-moss-400);
+    padding: 0.625rem 1.25rem;
+    font-weight: 600;
+    color: var(--color-ink-950);
+    transition:
+      background-color 150ms,
+      transform 150ms;
+  }
+  .btn-primary:hover {
+    background-color: var(--color-moss-300);
+  }
+  .btn-primary:active {
+    transform: translateY(1px);
+  }
+  .btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-ink-600);
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    color: var(--color-ink-100);
+    transition:
+      background-color 150ms,
+      border-color 150ms;
+  }
+  .btn-ghost:hover {
+    border-color: var(--color-ink-400);
+    background-color: var(--color-ink-800);
+  }
+  .btn-ghost:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .field {
+    width: 100%;
+    border-radius: 0.625rem;
+    border: 1px solid var(--color-ink-700);
+    background-color: var(--color-ink-900);
+    padding: 0.625rem 0.875rem;
+    color: var(--color-ink-50);
+    transition: border-color 150ms;
+  }
+  .field::placeholder {
+    color: var(--color-ink-500);
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-moss-500);
+  }
+
+  .link {
+    color: var(--color-moss-300);
+    text-decoration: underline;
+    text-decoration-color: rgb(191 209 102 / 0.4);
+    text-underline-offset: 4px;
+  }
+  .link:hover {
+    color: var(--color-moss-200);
+    text-decoration-color: var(--color-moss-300);
+  }
 }

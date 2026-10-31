@@ -19,7 +19,7 @@ function ErrorBanner({ children }: { children: React.ReactNode }) {
   return (
     <div
       role="alert"
-      className="rounded-lg border border-amber-500/50 bg-amber-950/40 p-3 text-amber-200"
+      className="rounded-xl border border-ochre-800 bg-ochre-950 px-4 py-3 text-ochre-200"
     >
       {children}
     </div>
@@ -53,17 +53,21 @@ function LiveResults() {
   }, [includeReplay]);
 
   return (
-    <main className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <main className="animate-rise space-y-10">
+      <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-semibold">Results</h1>
-          <p className="text-slate-400">
+          <p className="kicker">Scoreboard</p>
+          <h1 className="mt-3 font-display text-5xl tracking-tight text-ink-50 sm:text-6xl">
+            Results
+          </h1>
+          <p className="mt-3 max-w-xl text-ink-300">
             Every run today: what failed, what we fixed, where we stopped honestly, and what it
             cost. Refreshes every 10 s.
           </p>
         </div>
-        <label className="flex items-center gap-2 text-slate-200">
+        <label className="flex items-center gap-2 text-sm text-ink-200">
           <input
+            className="accent-moss-400"
             type="checkbox"
             checked={includeReplay}
             onChange={(e) => setIncludeReplay(e.target.checked)}
@@ -80,12 +84,12 @@ function LiveResults() {
       )}
 
       <StatsTiles stats={stats} />
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">Runs</h2>
+      <section className="space-y-4">
+        <h2 className="font-display text-3xl text-ink-50">Runs</h2>
         {stats ? (
           <ResultsTable rows={stats.rows ?? []} />
         ) : (
-          <p className="text-slate-400">{error ? "No data." : "Loading…"}</p>
+          <p className="animate-pulse text-ink-400">{error ? "No data." : "Loading…"}</p>
         )}
       </section>
     </main>
@@ -117,15 +121,18 @@ function DemoResults() {
   const kindOf = new Map(runs?.map((r) => [r.id, r.kind]) ?? []);
 
   return (
-    <main className="space-y-6">
+    <main className="animate-rise space-y-10">
       <div>
-        <h1 className="text-2xl font-semibold">Results · bundled demo runs</h1>
-        <p className="text-slate-400">
+        <p className="kicker">Scoreboard · bundled runs</p>
+        <h1 className="mt-3 font-display text-5xl tracking-tight text-ink-50 sm:text-6xl">
+          Results
+        </h1>
+        <p className="mt-3 max-w-xl text-ink-300">
           Computed in your browser from the runs bundled with this demo deployment, with the same
           definitions as the live results page. These are not live results.
         </p>
         {runs && (
-          <p className="mt-1 text-sm text-slate-300">
+          <p className="mt-2 font-mono text-xs text-ink-400">
             {recordings} recorded run{recordings === 1 ? "" : "s"}
             {samples > 0 &&
               ` + ${samples} hand-written illustrative sample${samples === 1 ? "" : "s"}`}
@@ -137,8 +144,8 @@ function DemoResults() {
       {error && <ErrorBanner>Can&apos;t load the bundled runs: {error}</ErrorBanner>}
 
       <StatsTiles stats={stats} />
-      <section className="space-y-2">
-        <h2 className="text-lg font-semibold">Bundled runs</h2>
+      <section className="space-y-4">
+        <h2 className="font-display text-3xl text-ink-50">Bundled runs</h2>
         {stats ? (
           <ResultsTable
             rows={stats.rows}
@@ -151,7 +158,7 @@ function DemoResults() {
             }}
           />
         ) : (
-          <p className="text-slate-400">{error ? "No data." : "Loading…"}</p>
+          <p className="animate-pulse text-ink-400">{error ? "No data." : "Loading…"}</p>
         )}
       </section>
     </main>

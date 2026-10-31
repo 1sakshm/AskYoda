@@ -18,54 +18,50 @@ interface CardProps {
 
 function ScenarioCard({ site, starting, error, onRun }: CardProps) {
   const lab = site.kind === "lab";
+  const busy = starting === site.id;
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-slate-700 bg-slate-900/60 p-5">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span
-          className={`rounded-full px-2.5 py-0.5 font-semibold ring-1 ${
-            lab
-              ? "bg-sky-500/15 text-sky-200 ring-sky-400/40"
-              : "bg-emerald-500/15 text-emerald-200 ring-emerald-400/40"
-          }`}
-        >
-          {lab ? "Test page" : "Real website"}
-        </span>
+    <article className="group flex flex-col gap-4 rounded-2xl border border-ink-700 bg-ink-900/80 p-6 transition-colors hover:border-ink-500 hover:bg-ink-850">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="kicker">{lab ? "Test page" : "Real website"}</span>
         {site.expected_class && (
-          <span className={`rounded px-2 py-0.5 ${CLASS_COLOR[site.expected_class]}`}>
+          <span
+            className={`rounded-full px-2.5 py-0.5 text-xs ${CLASS_COLOR[site.expected_class]}`}
+          >
             {CLASS_LABEL[site.expected_class]}
           </span>
         )}
       </div>
-      <h4 className="text-lg font-semibold text-slate-50">{site.title}</h4>
-      {site.summary && <p className="text-sm text-slate-300">{site.summary}</p>}
-      <p className="text-sm text-slate-400">
-        Starts at {RUNG_LABEL[site.start_rung ?? "fetch"]}
+      <h4 className="font-display text-2xl leading-tight text-ink-50">{site.title}</h4>
+      {site.summary && <p className="text-sm leading-relaxed text-ink-300">{site.summary}</p>}
+      <p className="font-mono text-xs text-ink-400">
+        starts at {RUNG_LABEL[site.start_rung ?? "fetch"].toLowerCase()}
         {site.cost_hint && ` · ${site.cost_hint}`}
       </p>
       {error && (
         <p
           role="alert"
-          className="rounded border border-rose-500/50 bg-rose-950/60 px-2 py-1 text-sm text-rose-200"
+          className="rounded-lg border border-ember-500/40 bg-ember-950/70 px-3 py-2 text-sm text-ember-200"
         >
           {error}
         </p>
       )}
-      <div className="mt-auto flex flex-wrap items-center gap-4 pt-1">
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-ink-700/70 pt-4">
         <button
           type="button"
           disabled={starting !== null}
           onClick={() => onRun(site)}
-          className="rounded-md bg-sky-600 px-5 py-2.5 font-semibold text-white hover:bg-sky-500 disabled:opacity-60"
+          className="btn-primary px-4 py-2 text-sm"
         >
-          {starting === site.id ? "Starting…" : "▶ Run live"}
+          {busy ? "Starting…" : "Run live"}
+          {!busy && <span aria-hidden>→</span>}
         </button>
         <a
           href={site.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-sm text-sky-300 hover:underline"
+          className="text-sm text-ink-300 transition-colors hover:text-ink-50"
         >
-          View the page ↗
+          View page ↗
         </a>
       </div>
     </article>
@@ -115,40 +111,47 @@ export default function ScenarioCards() {
   }
 
   if (loadError) {
-    return <p className="text-amber-200">Prepared autopsies are unavailable: {loadError}</p>;
+    return (
+      <p className="panel px-5 py-4 text-ochre-200">Prepared cases are unavailable: {loadError}</p>
+    );
   }
-  if (!groups) return <p className="animate-pulse text-slate-400">Loading prepared autopsies…</p>;
+  if (!groups) return <p className="animate-pulse text-ink-400">Loading prepared cases…</p>;
   if (groups.lab.length === 0 && groups.real.length === 0) return null;
 
   const sections = [
     {
       key: "lab",
       title: "Test pages built to fail",
-      blurb: "Our own pages, each built to trip one failure on purpose. All data on them is fictional.",
+      blurb:
+        "Our own pages, each built to trip one failure on purpose. All data on them is fictional.",
       sites: groups.lab,
     },
     {
       key: "real",
       title: "Real websites",
-      blurb: "Public sites (scraping sandboxes where possible) with the same failures in the wild. Less predictable: real sites change.",
+      blurb:
+        "Public sites (scraping sandboxes where possible) with the same failures in the wild. Less predictable: real sites change.",
       sites: groups.real,
     },
   ].filter((s) => s.sites.length > 0);
 
   return (
-    <section className="space-y-5">
-      <div className="space-y-1">
-        <h2 className="text-2xl font-semibold">Prepared autopsies</h2>
-        <p className="text-slate-400">
-          One click starts a live run on a site prepared in advance. It calls TinyFish and Claude
-          for real, so it spends the shared budget.
+    <section id="scenarios" className="scroll-mt-24 space-y-10">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="kicker">One click, real run</p>
+          <h2 className="mt-2 font-display text-4xl tracking-tight text-ink-50">Prepared cases</h2>
+        </div>
+        <p className="max-w-md text-ink-300">
+          Each starts a live run on a page prepared in advance. It calls TinyFish for real, so it
+          spends the shared budget.
         </p>
       </div>
       {sections.map((section) => (
-        <div key={section.key} className="space-y-3">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-100">{section.title}</h3>
-            <p className="text-sm text-slate-400">{section.blurb}</p>
+        <div key={section.key} className="space-y-4">
+          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-ink-700/70 pb-3">
+            <h3 className="text-lg font-medium text-ink-50">{section.title}</h3>
+            <p className="text-sm text-ink-400">{section.blurb}</p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {section.sites.map((site) => (

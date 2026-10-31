@@ -12,12 +12,12 @@ const PAGE = `<!doctype html>
 <title>Access denied</title>
 <style>
   body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
-    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #1f2430; background: #f3f4f6; }
-  .box { max-width: 520px; background: #fff; border: 1px solid #dde1e8; border-radius: 12px; padding: 28px; }
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: #24211c; background: #f5f2ec; }
+  .box { max-width: 520px; background: #fff; border: 1px solid #e3ddd3; border-radius: 12px; padding: 28px; }
   h1 { margin: 0 0 8px; font-size: 24px; }
-  p { margin: 0 0 12px; color: #5d6576; }
-  code { font-size: 13px; color: #1f2430; }
-  footer { margin-top: 18px; font-size: 12px; color: #8a929b; }
+  p { margin: 0 0 12px; color: #6b6458; }
+  code { font-size: 13px; color: #24211c; }
+  footer { margin-top: 18px; font-size: 12px; color: #9a9184; }
 </style>
 </head>
 <body>

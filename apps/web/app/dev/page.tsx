@@ -9,11 +9,12 @@ import { SAMPLE_NOTE, demoStreamUrl } from "@/lib/demoIndex";
 export default function DevPage() {
   const [runKey, setRunKey] = useState(0);
   return (
-    <main className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
+    <main className="space-y-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Sample run</h1>
-          <p className="text-sm text-slate-400">
+          <p className="kicker">Illustrative</p>
+          <h1 className="mt-2 font-display text-4xl tracking-tight text-ink-50">Sample run</h1>
+          <p className="mt-2 text-sm text-ink-400">
             {DEMO_MODE ? (
               <>
                 Plays the bundled <code>/demo/runs/sample.jsonl</code> in your browser.
@@ -29,7 +30,7 @@ export default function DevPage() {
         <button
           type="button"
           onClick={() => setRunKey((k) => k + 1)}
-          className="rounded-md bg-slate-800 px-3 py-1.5 text-sm hover:bg-slate-700"
+          className="btn-ghost px-4 py-1.5 text-sm"
         >
           Restart sample
         </button>

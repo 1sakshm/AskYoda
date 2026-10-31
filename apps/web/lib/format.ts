@@ -39,14 +39,14 @@ export const CLASS_LABEL: Record<FailureClass, string> = {
   captcha: "Captcha",
 };
 
-// Full class strings (not built from parts) so Tailwind can see them.
+// Full class strings (not built from parts) so Tailwind can see them. All warm hues: no blue/purple.
 export const CLASS_COLOR: Record<FailureClass, string> = {
-  needs_interaction: "bg-indigo-500/15 text-indigo-200 ring-1 ring-indigo-400/50",
-  popup_overlay: "bg-amber-500/15 text-amber-200 ring-1 ring-amber-400/50",
-  bot_block: "bg-rose-500/15 text-rose-200 ring-1 ring-rose-400/50",
-  misread_page: "bg-cyan-500/15 text-cyan-200 ring-1 ring-cyan-400/50",
-  auth_wall: "bg-slate-500/20 text-slate-200 ring-1 ring-slate-400/50",
-  captcha: "bg-purple-500/15 text-purple-200 ring-1 ring-purple-400/50",
+  needs_interaction: "bg-ochre-400/10 text-ochre-300 ring-1 ring-ochre-400/35",
+  popup_overlay: "bg-tangerine-300/10 text-tangerine-300 ring-1 ring-tangerine-300/35",
+  bot_block: "bg-ember-400/10 text-ember-300 ring-1 ring-ember-400/40",
+  misread_page: "bg-khaki-300/10 text-khaki-300 ring-1 ring-khaki-300/35",
+  auth_wall: "bg-ink-300/10 text-ink-200 ring-1 ring-ink-400/40",
+  captcha: "bg-clay-300/10 text-clay-300 ring-1 ring-clay-300/35",
 };
 
 export const STATUS_LABEL: Record<RunStatus, string> = {
@@ -60,13 +60,13 @@ export const STATUS_LABEL: Record<RunStatus, string> = {
 };
 
 export const STATUS_STYLE: Record<RunStatus, string> = {
-  queued: "text-slate-300",
-  running: "text-sky-300",
-  verified: "text-emerald-300",
-  unrecoverable: "text-rose-300",
-  budget_exhausted: "text-amber-300",
-  error: "text-rose-300 underline decoration-rose-500/60",
-  cancelled: "text-slate-400",
+  queued: "text-ink-300",
+  running: "text-moss-300",
+  verified: "text-moss-300",
+  unrecoverable: "text-ember-300",
+  budget_exhausted: "text-ochre-300",
+  error: "text-ember-300 underline decoration-ember-500/60",
+  cancelled: "text-ink-400",
 };
 
 export function fmtCredits(n: number): string {

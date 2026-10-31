@@ -24,15 +24,15 @@ export default function ResultsTable({
 }: Props) {
   if (rows.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed border-slate-700 p-6 text-center text-slate-400">
+      <p className="rounded-2xl border border-dashed border-ink-700 px-6 py-12 text-center text-ink-400">
         {emptyText}
       </p>
     );
   }
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-800">
+    <div className="overflow-x-auto rounded-2xl border border-ink-700 bg-ink-900/80">
       <table className="w-full min-w-[56rem] text-left text-sm">
-        <thead className="bg-slate-900 text-slate-300">
+        <thead className="border-b border-ink-700">
           <tr>
             {[
               "Time",
@@ -45,57 +45,59 @@ export default function ResultsTable({
               "Mode",
               "",
             ].map((h) => (
-              <th key={h} scope="col" className="px-3 py-2 font-medium">
+              <th key={h} scope="col" className="kicker px-4 py-3 font-normal">
                 {h}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-800">
+        <tbody className="divide-y divide-ink-800">
           {rows.map((r) => (
-            <tr key={r.run_id} className="hover:bg-slate-900/60">
-              <td className="whitespace-nowrap px-3 py-2 font-mono tabular-nums text-slate-300">
+            <tr key={r.run_id} className="transition-colors hover:bg-ink-850">
+              <td className="whitespace-nowrap px-4 py-3 font-mono text-xs tabular-nums text-ink-400">
                 {time(r.created_at)}
               </td>
-              <td className="max-w-[20rem] px-3 py-2">
-                <div className="font-medium text-slate-100">{r.site_id ?? "custom"}</div>
-                {rowNote?.(r) && <div className="text-sm text-violet-200">{rowNote(r)}</div>}
-                <div className="truncate font-mono text-sm text-slate-400" title={r.url}>
+              <td className="max-w-[20rem] px-4 py-3">
+                <div className="font-medium text-ink-50">{r.site_id ?? "custom"}</div>
+                {rowNote?.(r) && <div className="text-xs text-ochre-300">{rowNote(r)}</div>}
+                <div className="truncate font-mono text-xs text-ink-400" title={r.url}>
                   {r.url}
                 </div>
               </td>
-              <td className="px-3 py-2">
+              <td className="px-4 py-3">
                 <div className="flex flex-wrap gap-1">
-                  {r.classes.length === 0 && <span className="text-slate-400">—</span>}
+                  {r.classes.length === 0 && <span className="text-ink-500">—</span>}
                   {r.classes.map((c, i) => (
                     <span
                       key={`${c}-${i}`}
-                      className={`rounded px-1.5 py-0.5 text-sm ${CLASS_COLOR[c]}`}
+                      className={`rounded-full px-2 py-0.5 text-xs ${CLASS_COLOR[c]}`}
                     >
                       {CLASS_LABEL[c]}
                     </span>
                   ))}
                 </div>
               </td>
-              <td className={`whitespace-nowrap px-3 py-2 font-semibold ${STATUS_STYLE[r.status]}`}>
+              <td
+                className={`whitespace-nowrap px-4 py-3 font-mono text-xs tracking-wide ${STATUS_STYLE[r.status]}`}
+              >
                 {STATUS_LABEL[r.status]}
               </td>
-              <td className="px-3 py-2 tabular-nums text-slate-200">{r.attempts}</td>
-              <td className="px-3 py-2 tabular-nums text-slate-200">{r.credits_used}</td>
-              <td className="px-3 py-2 tabular-nums text-slate-300">
+              <td className="px-4 py-3 font-mono tabular-nums text-ink-200">{r.attempts}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-ink-200">{r.credits_used}</td>
+              <td className="px-4 py-3 font-mono tabular-nums text-ink-400">
                 {r.baseline_credits_estimate ?? "—"}
               </td>
-              <td className="px-3 py-2">
-                <span className={r.mode === "replay" ? "text-amber-300" : "text-emerald-300"}>
+              <td className="px-4 py-3 font-mono text-xs">
+                <span className={r.mode === "replay" ? "text-ochre-300" : "text-moss-300"}>
                   {r.mode === "replay" ? "replay" : "live"}
                 </span>
               </td>
-              <td className="px-3 py-2">
+              <td className="px-4 py-3 text-right">
                 <Link
                   href={`/runs/${encodeURIComponent(r.run_id)}`}
-                  className="text-sky-300 underline underline-offset-4 hover:text-sky-200"
+                  className="text-sm text-ink-300 transition-colors hover:text-moss-300"
                 >
-                  open
+                  Open →
                 </Link>
               </td>
             </tr>

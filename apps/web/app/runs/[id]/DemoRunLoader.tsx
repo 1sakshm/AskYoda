@@ -21,7 +21,7 @@ type LoadState =
 
 function BackLink() {
   return (
-    <Link href="/" className="text-sky-300 underline underline-offset-4">
+    <Link href="/" className="link">
       Back to the bundled runs
     </Link>
   );
@@ -47,11 +47,13 @@ export default function DemoRunLoader({ demoId }: { demoId: string }) {
     };
   }, [demoId]);
 
-  if (load.kind === "loading") return <p className="animate-pulse text-slate-400">Loading run…</p>;
+  if (load.kind === "loading") return <p className="animate-pulse text-ink-400">Loading run…</p>;
   if (load.kind === "missing") {
     return (
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold">No bundled run called “{demoId}”</h1>
+        <h1 className="font-display text-4xl tracking-tight text-ink-50">
+          No bundled run called “{demoId}”
+        </h1>
         <BackLink />
       </div>
     );
@@ -59,7 +61,7 @@ export default function DemoRunLoader({ demoId }: { demoId: string }) {
   if (load.kind === "error") {
     return (
       <div className="space-y-2">
-        <p className="text-rose-300">Can&apos;t load the bundled runs: {load.message}</p>
+        <p className="text-ember-300">Can&apos;t load the bundled runs: {load.message}</p>
         <BackLink />
       </div>
     );
@@ -86,8 +88,10 @@ export default function DemoRunLoader({ demoId }: { demoId: string }) {
 export function DemoOnlyNotice() {
   return (
     <div className="space-y-2">
-      <h1 className="text-2xl font-semibold">Only bundled runs are available here</h1>
-      <p className="text-slate-300">
+      <h1 className="font-display text-4xl tracking-tight text-ink-50">
+        Only bundled runs are available here
+      </h1>
+      <p className="text-ink-300">
         This is the static demo deployment: it replays bundled runs in your browser. Live runs need
         the API, which isn&apos;t part of this deployment.
       </p>

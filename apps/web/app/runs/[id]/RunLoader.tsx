@@ -43,12 +43,12 @@ export default function RunLoader({ runId }: { runId: string }) {
     };
   }, [runId]);
 
-  if (load.kind === "loading") return <p className="animate-pulse text-slate-400">Loading run…</p>;
+  if (load.kind === "loading") return <p className="animate-pulse text-ink-400">Loading run…</p>;
   if (load.kind === "missing") {
     return (
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold">Run not found</h1>
-        <Link href="/" className="text-sky-300 underline underline-offset-4">
+        <h1 className="font-display text-4xl tracking-tight text-ink-50">Run not found</h1>
+        <Link href="/" className="link">
           Start a new run
         </Link>
       </div>
@@ -57,8 +57,8 @@ export default function RunLoader({ runId }: { runId: string }) {
   if (load.kind === "error") {
     return (
       <div className="space-y-2">
-        <p className="text-rose-300">Can&apos;t load this run: {load.message}</p>
-        <Link href="/" className="text-sky-300 underline underline-offset-4">
+        <p className="text-ember-300">Can&apos;t load this run: {load.message}</p>
+        <Link href="/" className="link">
           Back to the run form
         </Link>
       </div>

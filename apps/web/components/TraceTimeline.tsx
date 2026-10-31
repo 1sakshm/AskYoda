@@ -30,7 +30,7 @@ function Chip({ text }: { text: string }) {
   return (
     <span
       title={text}
-      className="max-w-[18rem] truncate rounded bg-slate-800 px-1.5 py-0.5 text-sm text-slate-200"
+      className="max-w-[16rem] truncate rounded-full border border-ink-700 px-2 py-0.5 font-mono text-[11px] text-ink-300"
     >
       {text}
     </span>
@@ -43,29 +43,31 @@ function TraceRow({ ev, attempt }: { ev: TraceEvent; attempt: AttemptView }) {
   return (
     <li
       id={rowId(attempt.attemptNo, ev.seq)}
-      className={`scroll-mt-4 rounded px-2 py-1.5 ${
-        failing ? "animate-fail-flash border-l-4 border-rose-500 bg-rose-950" : "bg-slate-900/70"
+      className={`scroll-mt-4 rounded-lg px-3 py-2 ${
+        failing
+          ? "animate-fail-flash border-l-2 border-ember-400 bg-ember-950"
+          : "hover:bg-ink-800/60"
       }`}
     >
       <div className="flex items-baseline gap-3">
-        <span className="w-4 shrink-0 text-center text-slate-400" aria-hidden>
+        <span className="w-4 shrink-0 text-center text-ink-500" aria-hidden>
           {KIND_ICON[ev.kind]}
         </span>
-        <span className="w-[4.5rem] shrink-0 font-mono text-sm text-slate-400">
+        <span className="w-[4.25rem] shrink-0 font-mono text-xs text-ink-500">
           {relTime(ev.ts, attempt.startedAt)}
         </span>
-        <span className="min-w-0 flex-1 break-words text-slate-100">
+        <span className="min-w-0 flex-1 break-words text-sm text-ink-100">
           {ev.step_no ? (
-            <span className="mr-2 text-sm font-medium text-slate-400">Step {ev.step_no}</span>
+            <span className="mr-2 font-mono text-xs text-ink-400">step {ev.step_no}</span>
           ) : null}
           {ev.label}
         </span>
         {failing && (
-          <span className="shrink-0 text-sm font-medium text-rose-300">✕ failed here</span>
+          <span className="shrink-0 font-mono text-xs text-ember-300">✕ failed here</span>
         )}
         <button
           type="button"
-          className="shrink-0 text-sm text-slate-400 hover:text-slate-200"
+          className="shrink-0 font-mono text-xs text-ink-500 hover:text-ink-200"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
         >
@@ -73,7 +75,7 @@ function TraceRow({ ev, attempt }: { ev: TraceEvent; attempt: AttemptView }) {
         </button>
       </div>
       {open && (
-        <pre className="mt-1.5 max-h-64 overflow-auto rounded bg-slate-950 p-2 text-xs text-slate-400">
+        <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-ink-700 bg-ink-950 p-3 font-mono text-xs text-ink-300">
           {JSON.stringify(ev.raw, null, 2)}
         </pre>
       )}
@@ -87,37 +89,39 @@ function VerifyRow({ attempt }: { attempt: AttemptView }) {
   if (!v) return null;
   return (
     <li
-      className={`rounded px-3 py-2 ${
-        v.passed ? "bg-emerald-950/70 text-emerald-200" : "bg-rose-950/70 text-rose-200"
+      className={`rounded-lg border px-3 py-2.5 ${
+        v.passed
+          ? "border-moss-800 bg-moss-950 text-moss-200"
+          : "border-ember-800 bg-ember-950 text-ember-200"
       }`}
     >
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="w-full text-left font-medium"
+        className="w-full text-left text-sm font-medium"
       >
         {v.passed ? "✓ " : "✕ "}
         {v.summary}
-        <span className="ml-2 text-sm font-normal opacity-80">{open ? "hide" : "details"}</span>
+        <span className="ml-2 font-mono text-xs font-normal opacity-70">
+          {open ? "hide" : "details"}
+        </span>
       </button>
       {open && (
         <div className="mt-2 space-y-2 text-sm">
           <ul className="space-y-0.5">
             {v.checks.map((c) => (
-              <li key={c.name} className={c.passed ? "text-emerald-200" : "text-rose-200"}>
+              <li key={c.name} className={c.passed ? "text-moss-200" : "text-ember-200"}>
                 {c.passed ? "✓" : "✕"} <span className="font-mono">{c.name}</span>: {c.detail}
               </li>
             ))}
           </ul>
           {v.block_signals.length > 0 && (
             <div>
-              <div className="text-sm font-semibold uppercase tracking-wide opacity-80">
-                Block signals
-              </div>
+              <div className="kicker">Block signals</div>
               <ul className="space-y-0.5">
                 {v.block_signals.map((s, i) => (
-                  <li key={i} className="text-slate-200">
+                  <li key={i} className="text-ink-200">
                     <span className="font-mono">{s.kind}</span> in {s.where}: “{s.evidence}”
                   </li>
                 ))}
@@ -134,6 +138,12 @@ const STATUS_ICON: Record<AttemptView["status"], string> = {
   running: "…",
   passed: "✓",
   failed: "✕",
+};
+
+const STATUS_DOT: Record<AttemptView["status"], string> = {
+  running: "bg-moss-950 text-moss-300 ring-1 ring-moss-800",
+  passed: "bg-moss-400 text-ink-950",
+  failed: "bg-ember-400 text-ink-950",
 };
 
 export default function TraceTimeline({ attempts }: Props) {
@@ -204,38 +214,43 @@ export default function TraceTimeline({ attempts }: Props) {
   return (
     <div
       ref={scroller}
-      className="max-h-[70vh] space-y-4 overflow-y-auto pr-1"
+      className="max-h-[78vh] space-y-4 overflow-y-auto pr-1"
       onScroll={(e) => {
         if (performance.now() < programmaticUntil.current) return;
         const el = e.currentTarget;
         stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < STICK_PX;
       }}
     >
-      {attempts.length === 0 && <p className="text-slate-400">No events yet.</p>}
+      {attempts.length === 0 && (
+        <p className="panel px-5 py-8 text-center text-ink-400">Waiting for the first event…</p>
+      )}
       {attempts.map((attempt) => {
         const open = isOpen(attempt.attemptNo);
         const failing = attempt.events.find((e) => e.seq === attempt.failingSeq);
         return (
-          <section
-            key={attempt.attemptNo}
-            className="rounded-lg border border-slate-800 bg-slate-950/40 p-2"
-          >
+          <section key={attempt.attemptNo} className="panel p-3">
             <button
               type="button"
               onClick={() => setOverrides((o) => ({ ...o, [attempt.attemptNo]: !open }))}
               aria-expanded={open}
-              className="mb-1.5 flex w-full flex-wrap items-center gap-2 text-left"
+              className="mb-2 flex w-full flex-wrap items-center gap-2 px-1 py-1 text-left"
             >
-              <span className="text-sm font-semibold text-slate-200">
-                {STATUS_ICON[attempt.status]} Attempt {attempt.attemptNo} ·{" "}
-                {RUNG_LABEL[attempt.rung]}
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full font-mono text-xs ${STATUS_DOT[attempt.status]}`}
+                aria-hidden
+              >
+                {STATUS_ICON[attempt.status]}
+              </span>
+              <span className="text-sm font-medium text-ink-50">
+                Attempt {attempt.attemptNo}
+                <span className="ml-2 font-normal text-ink-400">{RUNG_LABEL[attempt.rung]}</span>
               </span>
               {attemptChips(attempt).map((chip) => (
                 <Chip key={chip} text={chip} />
               ))}
-              <span className="ml-auto text-sm text-slate-400">{open ? "collapse" : "expand"}</span>
+              <span className="ml-auto font-mono text-xs text-ink-500">{open ? "−" : "+"}</span>
             </button>
-            <ol className="space-y-1">
+            <ol className="space-y-0.5">
               {open &&
                 attempt.events
                   .filter((ev) => ev.kind !== "heartbeat")
@@ -244,7 +259,7 @@ export default function TraceTimeline({ attempts }: Props) {
             </ol>
             {/* The diagnosis stays visible when the attempt collapses: it is the story. */}
             {attempt.diagnosis && (
-              <div className="mt-2">
+              <div className="mt-3">
                 <DiagnosisCard
                   diagnosis={attempt.diagnosis}
                   failingStepNo={failing?.step_no ?? null}

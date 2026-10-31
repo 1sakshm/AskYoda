@@ -36,8 +36,16 @@ export function isPlaceholderUrl(url: string): boolean {
 
 function Frame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-slate-800 bg-slate-900">
-      {children}
+    <div className="overflow-hidden rounded-2xl border border-ink-700 bg-ink-900 shadow-[0_30px_80px_-40px_rgb(0_0_0/0.8)]">
+      <div className="flex items-center gap-3 border-b border-ink-700 bg-ink-850 px-4 py-2.5">
+        <span className="flex gap-1.5" aria-hidden>
+          <span className="h-2.5 w-2.5 rounded-full bg-ink-600" />
+          <span className="h-2.5 w-2.5 rounded-full bg-ink-600" />
+          <span className="h-2.5 w-2.5 rounded-full bg-ink-600" />
+        </span>
+        <span className="kicker">agent browser</span>
+      </div>
+      <div className="relative aspect-video w-full bg-ink-950">{children}</div>
     </div>
   );
 }
@@ -45,10 +53,10 @@ function Frame({ children }: { children: React.ReactNode }) {
 function Message({ title, detail, pulse }: { title: string; detail?: string; pulse?: boolean }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-2 p-6 text-center">
-      <p className={`text-lg font-medium text-slate-200 ${pulse ? "animate-pulse" : ""}`}>
+      <p className={`font-display text-2xl text-ink-100 ${pulse ? "animate-pulse" : ""}`}>
         {title}
       </p>
-      {detail && <p className="max-w-md text-sm text-slate-400">{detail}</p>}
+      {detail && <p className="max-w-md text-sm text-ink-400">{detail}</p>}
     </div>
   );
 }
@@ -75,7 +83,7 @@ function FailingShot({ src, attempt }: { src: string | null; attempt: AttemptVie
           className="h-full w-full object-contain"
           onError={() => setBroken(true)}
         />
-        <figcaption className="absolute inset-x-0 bottom-0 border-t border-rose-500/50 bg-slate-950/85 px-3 py-2 text-rose-100">
+        <figcaption className="absolute inset-x-0 bottom-0 border-t border-ember-500/50 bg-ink-950/90 px-4 py-2.5 text-sm text-ember-200">
           {caption}
         </figcaption>
       </figure>
@@ -134,7 +142,7 @@ function StepShots({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={shown} alt="The agent's browser" className="h-full w-full object-contain" />
         {caption && (
-          <figcaption className="absolute inset-x-0 bottom-0 border-t border-slate-700 bg-slate-950/85 px-3 py-2 text-slate-200">
+          <figcaption className="absolute inset-x-0 bottom-0 border-t border-ink-700 bg-ink-950/90 px-4 py-2.5 text-sm text-ink-200">
             {caption}
           </figcaption>
         )}

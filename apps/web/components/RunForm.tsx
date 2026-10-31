@@ -43,9 +43,8 @@ const EXPECTED_TYPES: { value: ExpectedCheckType | ""; label: string }[] = [
   { value: "min_items", label: "List has at least N items" },
 ];
 
-const inputClass =
-  "w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:border-sky-500 focus:outline-none";
-const labelClass = "block text-sm font-medium text-slate-300";
+const inputClass = "field";
+const labelClass = "kicker block";
 
 interface RunFormProps {
   /** When set, the form is shown disabled with this note (e.g. in the static demo). */
@@ -115,18 +114,18 @@ export default function RunForm({ disabledNote }: RunFormProps = {}) {
 
   return (
     <form
-      className="max-w-3xl space-y-5"
+      className="panel space-y-6 p-6 sm:p-8"
       onSubmit={(e) => {
         e.preventDefault();
         void submit();
       }}
     >
       {disabledNote && (
-        <p className="rounded-lg border border-slate-600 bg-slate-900 px-3 py-2 text-slate-200">
+        <p className="rounded-lg border border-ink-600 bg-ink-850 px-4 py-3 text-ink-200">
           {disabledNote}
         </p>
       )}
-      <fieldset disabled={disabled} className="min-w-0 space-y-5 disabled:opacity-60">
+      <fieldset disabled={disabled} className="min-w-0 space-y-6 disabled:opacity-60">
         <div className="space-y-1.5">
           <label htmlFor="site" className={labelClass}>
             Demo site
@@ -147,19 +146,19 @@ export default function RunForm({ disabledNote }: RunFormProps = {}) {
             ))}
           </select>
           {sitesError && (
-            <p className="text-sm text-amber-300">Demo sites unavailable: {sitesError}</p>
+            <p className="text-sm text-ochre-300">Demo sites unavailable: {sitesError}</p>
           )}
           {site && (
-            <p className="text-sm text-slate-300">
+            <p className="text-sm text-ink-300">
               {site.expected_class ? `Shows ${CLASS_LABEL[site.expected_class]}` : "Demo site"}
               {site.has_trace ? (
-                <span className="text-amber-300"> · ● recorded trace available</span>
+                <span className="text-ochre-300"> · ● recorded trace available</span>
               ) : (
-                <span className="text-slate-400"> · not recorded yet</span>
+                <span className="text-ink-400"> · not recorded yet</span>
               )}
             </p>
           )}
-          {site?.notes && <p className="text-sm text-slate-400">{site.notes}</p>}
+          {site?.notes && <p className="text-sm text-ink-400">{site.notes}</p>}
         </div>
 
         <div className="space-y-1.5">
@@ -192,8 +191,8 @@ export default function RunForm({ disabledNote }: RunFormProps = {}) {
           />
         </div>
 
-        <fieldset className="space-y-2 rounded-lg border border-slate-800 p-4">
-          <legend className="px-1 text-sm font-medium text-slate-300">Expected-output check</legend>
+        <fieldset className="space-y-3 rounded-xl border border-ink-700 p-5">
+          <legend className="kicker px-2">Expected-output check</legend>
           <select
             aria-label="Expected check type"
             className={inputClass}
@@ -245,15 +244,18 @@ export default function RunForm({ disabledNote }: RunFormProps = {}) {
             </div>
           )}
           {!form.expectedType && (
-            <p className="text-sm text-amber-300/90">
+            <p className="text-sm text-ochre-300/90">
               Without an expected check the verifier can only catch empty, null, blocked or
               self-reported failures.
             </p>
           )}
         </fieldset>
 
-        <details className="rounded-lg border border-slate-800 p-4">
-          <summary className="cursor-pointer text-sm font-medium text-slate-300">Advanced</summary>
+        <details className="group rounded-xl border border-ink-700 p-5">
+          <summary className="kicker cursor-pointer list-none select-none hover:text-ink-200">
+            <span className="mr-2 inline-block transition-transform group-open:rotate-90">▸</span>
+            Advanced
+          </summary>
           <div className="mt-3 space-y-3">
             <div className="space-y-1.5">
               <label htmlFor="schema" className={labelClass}>
@@ -268,7 +270,7 @@ export default function RunForm({ disabledNote }: RunFormProps = {}) {
                 onChange={(e) => update({ outputSchema: e.target.value })}
               />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-1.5">
                 <label htmlFor="start-rung" className={labelClass}>
                   Start rung
@@ -322,13 +324,13 @@ export default function RunForm({ disabledNote }: RunFormProps = {}) {
           </div>
         </details>
 
-        <fieldset className="flex items-center gap-6">
+        <fieldset className="flex flex-wrap items-center gap-6">
           <legend className="sr-only">Mode</legend>
           {(["live", "replay"] as const).map((mode) => (
             <label
               key={mode}
               className={`flex items-center gap-2 ${
-                mode === "replay" && !canReplay ? "text-slate-400" : "text-slate-200"
+                mode === "replay" && !canReplay ? "text-ink-500" : "text-ink-200"
               }`}
             >
               <input
@@ -338,6 +340,7 @@ export default function RunForm({ disabledNote }: RunFormProps = {}) {
                 checked={form.mode === mode}
                 disabled={mode === "replay" && !canReplay}
                 onChange={() => update({ mode })}
+                className="accent-moss-400"
               />
               {mode === "live" ? "Live (calls TinyFish)" : "Replay recorded trace"}
             </label>
@@ -347,9 +350,9 @@ export default function RunForm({ disabledNote }: RunFormProps = {}) {
         {errors.length > 0 && (
           <div
             role="alert"
-            className="space-y-2 rounded-lg border border-rose-500/50 bg-rose-950/60 p-3"
+            className="space-y-2 rounded-xl border border-ember-500/40 bg-ember-950/70 p-4"
           >
-            <ul className="list-inside list-disc text-sm text-rose-200">
+            <ul className="list-inside list-disc text-sm text-ember-200">
               {errors.map((msg) => (
                 <li key={msg}>{msg}</li>
               ))}
@@ -357,7 +360,7 @@ export default function RunForm({ disabledNote }: RunFormProps = {}) {
             {status === 503 && canReplay && form.mode !== "replay" && (
               <button
                 type="button"
-                className="rounded-md bg-amber-500/20 px-3 py-1.5 text-sm text-amber-200 hover:bg-amber-500/30"
+                className="btn-ghost px-3 py-1.5 text-sm"
                 onClick={() => {
                   update({ mode: "replay" });
                   void submit("replay");
@@ -369,13 +372,10 @@ export default function RunForm({ disabledNote }: RunFormProps = {}) {
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-md bg-sky-600 px-5 py-2.5 font-semibold text-white hover:bg-sky-500 disabled:opacity-60"
-          >
-            {submitting ? "Starting…" : form.mode === "replay" ? "Run (replay)" : "Run"}
+        <div className="flex flex-wrap items-center gap-3 border-t border-ink-700/70 pt-6">
+          <button type="submit" disabled={submitting} className="btn-primary">
+            {submitting ? "Starting…" : form.mode === "replay" ? "Run replay" : "Start run"}
+            {!submitting && <span aria-hidden>→</span>}
           </button>
           {canReplay && (
             <button
@@ -385,7 +385,7 @@ export default function RunForm({ disabledNote }: RunFormProps = {}) {
                 update({ mode: "replay" });
                 void submit("replay");
               }}
-              className="rounded-md bg-amber-500/20 px-5 py-2.5 font-semibold text-amber-200 ring-1 ring-amber-400/50 hover:bg-amber-500/30 disabled:opacity-60"
+              className="btn-ghost"
             >
               ▶ Replay recorded run
             </button>

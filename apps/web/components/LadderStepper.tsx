@@ -1,5 +1,3 @@
-import { Fragment } from "react";
-
 import { RUNG_ORDER, fmtCredits } from "@/lib/format";
 import type { RungState, RunViewState } from "@/lib/runState";
 import type { Rung, RungChangeEvent } from "@/lib/types";
@@ -17,12 +15,28 @@ const SUBTITLE: Record<Rung, string> = {
 };
 
 const STATE_STYLE: Record<RungState, string> = {
-  pending: "border-slate-700 bg-slate-900/40 text-slate-400",
-  // The flash plays once (1.5 s) each time a rung becomes active.
-  active: "border-sky-400 bg-sky-950/60 text-sky-100 animate-rung-flash",
-  failed: "border-rose-500 bg-rose-950/60 text-rose-100",
-  passed: "border-emerald-500 bg-emerald-950/60 text-emerald-100",
-  skipped: "border-dashed border-slate-700 bg-slate-900/20 text-slate-400",
+  pending: "border-ink-700 bg-ink-900/60 text-ink-400",
+  // The glow plays once (1.5 s) each time a rung becomes active.
+  active: "border-moss-500 bg-moss-950 text-ink-50 animate-rung-flash",
+  failed: "border-ember-500/70 bg-ember-950/80 text-ink-50",
+  passed: "border-moss-400 bg-moss-900/70 text-ink-50",
+  skipped: "border-dashed border-ink-700 bg-transparent text-ink-500",
+};
+
+const DOT: Record<RungState, string> = {
+  pending: "bg-ink-600",
+  active: "bg-moss-400 animate-pulse",
+  failed: "bg-ember-400",
+  passed: "bg-moss-400",
+  skipped: "bg-ink-700",
+};
+
+const WORD_STYLE: Record<RungState, string> = {
+  pending: "text-ink-500",
+  active: "text-moss-300",
+  failed: "text-ember-300",
+  passed: "text-moss-300",
+  skipped: "text-ink-500",
 };
 
 /** Why a rung was skipped: the reason of the rung change that skipped it. */
@@ -47,43 +61,42 @@ interface Props {
 export default function LadderStepper({ rungs, rungChanges }: Props) {
   const last = rungChanges[rungChanges.length - 1];
   return (
-    <div className="space-y-2">
-      <ol className="flex items-stretch gap-2">
-        {RUNG_ORDER.map((rung, i) => {
+    <div className="space-y-3">
+      <ol className="grid gap-3 md:grid-cols-3">
+        {RUNG_ORDER.map((rung) => {
           const view = rungs[rung];
           const skipped = view.state === "skipped";
           return (
-            <Fragment key={rung}>
-              {i > 0 && (
-                <li aria-hidden className="flex items-center text-2xl text-slate-600">
-                  →
-                </li>
-              )}
-              <li className={`flex-1 rounded-lg border-2 px-4 py-3 ${STATE_STYLE[view.state]}`}>
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className={`text-lg font-semibold ${skipped ? "line-through" : ""}`}>
-                    {TITLE[rung]}
-                  </span>
-                  <span className="text-sm font-medium uppercase tracking-wide">
-                    {STATE_WORD[view.state]}
-                  </span>
+            <li
+              key={rung}
+              className={`rounded-xl border px-4 py-3.5 transition-colors ${STATE_STYLE[view.state]}`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className={`font-medium ${skipped ? "line-through" : ""}`}>
+                  {TITLE[rung]}
+                </span>
+                <span
+                  className={`flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.12em] ${WORD_STYLE[view.state]}`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${DOT[view.state]}`} aria-hidden />
+                  {STATE_WORD[view.state]}
+                </span>
+              </div>
+              {skipped ? (
+                <div className="mt-1 text-sm">
+                  skipped — {skipReason(rung, rungChanges) ?? "not needed"}
                 </div>
-                {skipped ? (
-                  <div className="text-sm">
-                    skipped — {skipReason(rung, rungChanges) ?? "not needed"}
-                  </div>
-                ) : (
-                  <div className="text-sm opacity-80">
-                    {SUBTITLE[rung]} · {view.attempts.length} attempt
-                    {view.attempts.length === 1 ? "" : "s"} · {fmtCredits(view.credits)}
-                  </div>
-                )}
-              </li>
-            </Fragment>
+              ) : (
+                <div className="mt-1 font-mono text-xs text-ink-400">
+                  {SUBTITLE[rung]} · {view.attempts.length} attempt
+                  {view.attempts.length === 1 ? "" : "s"} · {fmtCredits(view.credits)}
+                </div>
+              )}
+            </li>
           );
         })}
       </ol>
-      {last && <p className="text-sm text-slate-400">{last.reason}</p>}
+      {last && <p className="text-sm text-ink-400">{last.reason}</p>}
     </div>
   );
 }

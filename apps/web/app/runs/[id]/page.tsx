@@ -16,7 +16,7 @@ function RunFor({ id }: { id: string }) {
 // With Cache Components, dynamic params are runtime data and must be read inside Suspense.
 export default function RunPage({ params }: PageProps<"/runs/[id]">) {
   return (
-    <Suspense fallback={<p className="animate-pulse text-slate-400">Loading run…</p>}>
+    <Suspense fallback={<p className="animate-pulse text-ink-400">Loading run…</p>}>
       {params.then(({ id }) => (
         <RunFor id={id} />
       ))}

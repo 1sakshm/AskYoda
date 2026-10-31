@@ -2,18 +2,18 @@ import { STATUS_LABEL, STATUS_STYLE, fmtCredits } from "@/lib/format";
 import type { RunStatus, VerdictEvent } from "@/lib/types";
 
 const CARD_STYLE: Partial<Record<RunStatus, string>> = {
-  verified: "border-emerald-500/60 bg-emerald-950/40",
-  unrecoverable: "border-rose-500/60 bg-rose-950/40",
-  budget_exhausted: "border-amber-500/60 bg-amber-950/30",
-  error: "border-rose-500/60 border-dashed bg-slate-900/60",
-  cancelled: "border-slate-600 bg-slate-900/60",
+  verified: "border-moss-500/60 bg-moss-950",
+  unrecoverable: "border-ember-500/50 bg-ember-950",
+  budget_exhausted: "border-ochre-500/50 bg-ochre-950",
+  error: "border-dashed border-ember-500/50 bg-ink-900",
+  cancelled: "border-ink-600 bg-ink-900",
 };
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div className="text-sm uppercase tracking-wide text-slate-300">{label}</div>
-      <div className="text-lg font-semibold text-slate-100">{value}</div>
+      <div className="kicker">{label}</div>
+      <div className="mt-1 font-mono text-lg text-ink-50">{value}</div>
     </div>
   );
 }
@@ -24,24 +24,30 @@ export default function VerdictCard({ verdict }: { verdict: VerdictEvent | null 
   const saved = baseline !== null ? baseline - verdict.credits_used : null;
   return (
     <section
-      className={`space-y-3 rounded-lg border-2 p-5 ${CARD_STYLE[verdict.status] ?? "border-slate-700"}`}
+      className={`animate-rise space-y-5 rounded-2xl border p-6 ${CARD_STYLE[verdict.status] ?? "border-ink-700 bg-ink-900"}`}
     >
-      <div className={`text-5xl font-extrabold tracking-tight ${STATUS_STYLE[verdict.status]}`}>
-        {STATUS_LABEL[verdict.status]}
+      <div>
+        <p className="kicker">Verdict</p>
+        <div
+          className={`mt-2 font-display text-5xl tracking-tight sm:text-6xl ${STATUS_STYLE[verdict.status]}`}
+        >
+          {STATUS_LABEL[verdict.status].toLowerCase().replace(/^./, (c) => c.toUpperCase())}
+        </div>
       </div>
-      <p className="text-lg text-slate-100">{verdict.reason}</p>
-      <div className="flex flex-wrap gap-8">
+      <p className="text-lg leading-relaxed text-ink-100">{verdict.reason}</p>
+      <div className="grid grid-cols-2 gap-6 border-t border-ink-50/10 pt-5 sm:grid-cols-4">
         <Stat label="Attempts" value={String(verdict.attempts_used)} />
         <Stat label="Credits used" value={fmtCredits(verdict.credits_used)} />
-        {baseline !== null && (
-          <Stat label="Naive baseline (3× stealth)" value={fmtCredits(baseline)} />
-        )}
+        {baseline !== null && <Stat label="Naive baseline" value={fmtCredits(baseline)} />}
         {saved !== null && saved > 0 && <Stat label="Saved" value={fmtCredits(saved)} />}
       </div>
       {verdict.final_result && (
-        <pre className="max-h-60 overflow-auto rounded bg-slate-950 p-3 text-sm text-slate-200">
-          {JSON.stringify(verdict.final_result, null, 2)}
-        </pre>
+        <div>
+          <p className="kicker mb-2">Result</p>
+          <pre className="max-h-64 overflow-auto rounded-xl border border-ink-700 bg-ink-950 p-4 font-mono text-sm text-ink-100">
+            {JSON.stringify(verdict.final_result, null, 2)}
+          </pre>
+        </div>
       )}
     </section>
   );

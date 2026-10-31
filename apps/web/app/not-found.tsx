@@ -2,22 +2,23 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <main className="max-w-2xl space-y-3">
-      <h1 className="text-2xl font-semibold">Page not found</h1>
-      <p className="text-slate-300">
-        <Link href="/" className="text-sky-300 underline underline-offset-4">
+    <main className="animate-rise mx-auto max-w-2xl space-y-6 py-16 text-center">
+      <p className="kicker">404</p>
+      <h1 className="font-display text-6xl tracking-tight text-ink-50">Nothing here.</h1>
+      <p className="text-lg text-ink-300">
+        This page doesn&apos;t exist. Try one of these instead.
+      </p>
+      <div className="flex flex-wrap justify-center gap-3">
+        <Link href="/" className="btn-primary">
           Start a run
         </Link>
-        ,{" "}
-        <Link href="/results" className="text-sky-300 underline underline-offset-4">
-          see results
-        </Link>{" "}
-        or{" "}
-        <Link href="/dev" className="text-sky-300 underline underline-offset-4">
-          open the sample run
+        <Link href="/results" className="btn-ghost">
+          See results
         </Link>
-        .
-      </p>
+        <Link href="/dev" className="btn-ghost">
+          Sample run
+        </Link>
+      </div>
     </main>
   );
 }
