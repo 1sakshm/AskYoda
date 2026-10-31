@@ -321,10 +321,10 @@ async def failing_step_screenshot(run_id: str, attempt_no: int, svc: ServicesDep
 
 @router.get("/runs/{run_id}/attempts/{attempt_no}/latest-screenshot")
 async def latest_step_screenshot(run_id: str, attempt_no: int, svc: ServicesDep) -> Response:
-    """The newest step screenshot of an agent attempt, while it runs or after it ends.
+    """The newest step screenshot of an agent attempt (404 until TinyFish has published steps).
 
-    TinyFish's live viewer can take longer to connect than a short run lasts, so the run view
-    shows these (refreshed on every step) until the stream is up. 404 until the first step.
+    TinyFish publishes a run's steps only as it finishes, and its live viewer often connects
+    just as a short run ends, so the run view shows this once the attempt is over.
     """
     run = await db.get_run(run_id)
     if run is None or run.mode is RunMode.replay or svc.tinyfish is None:

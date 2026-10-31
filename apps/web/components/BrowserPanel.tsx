@@ -84,9 +84,9 @@ function FailingShot({ src, attempt }: { src: string | null; attempt: AttemptVie
 }
 
 /**
- * The agent's newest step screenshot, fetched again on every step (`version`). The previous
- * image stays up until the next one has loaded, so it never flickers. TinyFish's live viewer
- * can take longer to connect than a short run lasts; this shows the browser from step one.
+ * The agent's newest step screenshot (`version` busts the cache). The previous image stays up
+ * until the next one has loaded, so it never flickers. Shown after an attempt ends, in place
+ * of "Live view ended": TinyFish's live viewer often connects only as a short run finishes.
  */
 function StepShots({
   runId,
@@ -102,21 +102,28 @@ function StepShots({
   waiting: string;
 }) {
   const [shown, setShown] = useState<string | null>(null);
+  const [missing, setMissing] = useState(false);
 
   useEffect(() => {
     const src = latestScreenshotUrl(runId, attemptNo, version);
     const img = new Image();
     img.onload = () => setShown(src);
+    img.onerror = () => setMissing(true);
     img.src = src;
     return () => {
       img.onload = null;
+      img.onerror = null;
     };
   }, [runId, attemptNo, version]);
 
   if (!shown) {
     return (
       <Frame>
-        <Message title={waiting} pulse />
+        {missing ? (
+          <Message title="Live view ended" detail={caption} />
+        ) : (
+          <Message title={waiting} pulse />
+        )}
       </Frame>
     );
   }
@@ -136,20 +143,7 @@ function StepShots({
   );
 }
 
-function ViewToggle({ live, onToggle }: { live: boolean; onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="mb-2 rounded border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800"
-    >
-      {live ? "Show step screenshots (instant)" : "Watch TinyFish live stream (slower to connect)"}
-    </button>
-  );
-}
-
 export default function BrowserPanel({ liveView, attempt, mode, runId, screenshotSrc }: Props) {
-  const [preferStream, setPreferStream] = useState(false);
   if (!attempt) {
     return (
       <Frame>
@@ -179,43 +173,19 @@ export default function BrowserPanel({ liveView, attempt, mode, runId, screensho
     return <FailingShot key={`${runId}:${attempt.attemptNo}`} src={src} attempt={attempt} />;
   }
 
-  // A real live run (not the static demo): step screenshots first, the stream on request.
-  if (mode === "live" && !screenshotSrc) {
-    const running = attempt.status === "running";
-    const canStream = running && !!view?.active && !isPlaceholderUrl(view.url);
-    const toggle = canStream ? (
-      <ViewToggle live={preferStream} onToggle={() => setPreferStream((p) => !p)} />
-    ) : null;
-    if (canStream && preferStream && view) {
-      return (
-        <div>
-          {toggle}
-          <Frame>
-            <iframe
-              src={view.url}
-              title={`Live browser for attempt ${attempt.attemptNo}`}
-              className="h-full w-full"
-              referrerPolicy="no-referrer"
-              allow="fullscreen"
-            />
-          </Frame>
-        </div>
-      );
-    }
+  // A real live run (not the static demo) whose attempt has ended: show its last step.
+  // TinyFish publishes step screenshots only as the attempt finishes, so during the attempt
+  // the live stream below is the only picture.
+  if (mode === "live" && !screenshotSrc && attempt.status !== "running" && !view?.active) {
     return (
-      <div>
-        {toggle}
-        <StepShots
-          key={`${runId}:${attempt.attemptNo}`}
-          runId={runId}
-          attemptNo={attempt.attemptNo}
-          version={attempt.events.length}
-          caption={running ? undefined : attempt.verify?.summary}
-          waiting={
-            running ? "Agent starting — first screenshot in a few seconds…" : "Loading last step…"
-          }
-        />
-      </div>
+      <StepShots
+        key={`${runId}:${attempt.attemptNo}`}
+        runId={runId}
+        attemptNo={attempt.attemptNo}
+        version={attempt.events.length}
+        caption={attempt.verify?.summary}
+        waiting="Loading the last step…"
+      />
     );
   }
 
