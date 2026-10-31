@@ -1,0 +1,312 @@
+import asyncio
+import json
+from datetime import UTC, datetime
+
+import httpx
+import pytest
+
+from app import db
+from app.config import Settings
+from app.events import Emitter
+from app.main import create_app
+from app.models import Run, RunMode, RunRequest, RunStatus
+from app.tinyfish.client import TinyFishError
+from tests.fakes import FakeTinyFish, run_record, sse_run
+
+PRODUCTS = {
+    "products": [{"name": "Blue Mug", "price": "$12.00"}, {"name": "Red Kettle", "price": "$39.00"}]
+}
+BODY = {
+    "url": "https://shop.example.com/products",
+    "goal": "List the first 2 products",
+    "expected": {"type": "min_items", "path": "products", "min": 2},
+    "start_rung": "agent",
+}
+
+
+def _settings(**overrides) -> Settings:
+    return Settings(_env_file=None, **overrides)
+
+
+@pytest.fixture(autouse=True)
+def no_sleep(monkeypatch):
+    async def instant(_seconds):
+        return None
+
+    monkeypatch.setattr("app.ladder.controller.asyncio.sleep", instant)
+
+
+async def _client(temp_db, **app_kwargs):
+    settings = app_kwargs.pop("settings", None) or _settings()
+    transport = httpx.ASGITransport(app=create_app(settings, **app_kwargs))
+    return httpx.AsyncClient(transport=transport, base_url="http://test")
+
+
+def _events(text: str) -> list[dict]:
+    return [json.loads(line[6:]) for line in text.splitlines() if line.startswith("data: ")]
+
+
+async def _run_and_stream(client: httpx.AsyncClient, body: dict) -> tuple[str, list[dict]]:
+    created = await client.post("/runs", json=body)
+    assert created.status_code == 201, created.text
+    run_id = created.json()["run_id"]
+    stream = await client.get(f"/runs/{run_id}/stream")
+    return run_id, _events(stream.text)
+
+
+async def test_health_reports_status_without_keys(temp_db):
+    async with await _client(temp_db) as client:
+        body = (await client.get("/health")).json()
+    assert body["status"] == "ok" and body["db"] == "ok"
+    assert set(body) >= {"status", "mode", "tinyfish_key", "anthropic_key", "db", "version"}
+    assert (body["claude_spent_usd"], body["claude_calls"], body["claude_budget_usd"]) == (
+        0.0,
+        0,
+        4.0,
+    )
+
+
+async def test_sample_stream_sends_every_event_with_its_seq_as_id(temp_db):
+    async with await _client(temp_db) as client:
+        resp = await client.get("/dev/sample-stream", params={"delay_ms": 0})
+    assert resp.headers["content-type"].startswith("text/event-stream")
+    ids = [line[4:] for line in resp.text.splitlines() if line.startswith("id: ")]
+    data = _events(resp.text)
+    assert len(data) == 36
+    assert ids == [str(e["seq"]) for e in data]
+
+
+async def test_create_run_without_tinyfish_key_is_503(temp_db):
+    async with await _client(temp_db, tinyfish=None) as client:
+        resp = await client.post("/runs", json=BODY)
+    assert resp.status_code == 503
+    assert "TINYFISH_API_KEY" in resp.json()["detail"]
+
+
+async def test_replay_without_a_recorded_trace_is_409(temp_db):
+    async with await _client(temp_db, tinyfish=FakeTinyFish()) as client:
+        resp = await client.post("/runs", json={**BODY, "mode": "replay", "site_id": "nope"})
+    assert resp.status_code == 409
+    assert resp.json()["detail"].startswith("replay_unavailable")
+
+
+async def test_invalid_request_is_422(temp_db):
+    async with await _client(temp_db, tinyfish=FakeTinyFish()) as client:
+        resp = await client.post("/runs", json={**BODY, "url": "ftp://x"})
+    assert resp.status_code == 422
+
+
+async def test_live_agent_run_streams_and_is_verified(temp_db):
+    fake = FakeTinyFish(
+        streams=[sse_run("tf_1", ["Navigating", "Reading products"], result=PRODUCTS)],
+        runs={"tf_1": run_record("tf_1", 2)},
+    )
+    async with await _client(temp_db, tinyfish=fake) as client:
+        run_id, events = await _run_and_stream(client, BODY)
+        run = (await client.get(f"/runs/{run_id}")).json()
+
+    types = [e["type"] for e in events]
+    assert types[:3] == ["budget", "rung_change", "attempt_started"]
+    assert types[-3:] == ["budget", "verify", "verdict"]
+    assert "live_view" in types
+    kinds = [e["event"]["kind"] for e in events if e["type"] == "trace_event"]
+    assert kinds == ["started", "live_view", "progress", "progress", "complete", "run_snapshot"]
+    assert [e["seq"] for e in events] == list(range(1, len(events) + 1))
+    assert events[-1]["status"] == "verified"
+    assert run["status"] == "verified"
+    assert run["credits_used"] == 2
+    assert run["attempts"][0]["tf_run_id"] == "tf_1"
+    assert fake.bodies[0]["browser_profile"] == "lite"
+
+
+async def test_stream_resumes_after_last_event_id(temp_db):
+    fake = FakeTinyFish(
+        streams=[sse_run("tf_1", ["a"], result=PRODUCTS)], runs={"tf_1": run_record("tf_1", 1)}
+    )
+    async with await _client(temp_db, tinyfish=fake) as client:
+        run_id, events = await _run_and_stream(client, BODY)
+        resumed = await client.get(f"/runs/{run_id}/stream", headers={"Last-Event-ID": "5"})
+        via_query = await client.get(f"/runs/{run_id}/stream", params={"after": len(events) - 1})
+    assert [e["seq"] for e in _events(resumed.text)] == list(range(6, len(events) + 1))
+    assert [e["type"] for e in _events(via_query.text)] == ["verdict"]
+
+
+async def test_completed_with_null_result_is_rejected(temp_db):
+    fake = FakeTinyFish(streams=[sse_run("tf_1", ["A cookie dialog covers the page"], result=None)])
+    async with await _client(temp_db, tinyfish=fake) as client:
+        _, events = await _run_and_stream(client, BODY)
+    verify = next(e for e in events if e["type"] == "verify")
+    assert verify["result"]["summary"] == "Rejected: Agent reported COMPLETED but result is null"
+    assert events[-1]["type"] == "verdict" and events[-1]["status"] != "verified"
+
+
+async def test_credit_limit_cancels_the_tinyfish_run(temp_db):
+    fake = FakeTinyFish(
+        streams=[sse_run("tf_1", [f"step {i}" for i in range(10)], status="CANCELLED")]
+    )
+    async with await _client(temp_db, tinyfish=fake) as client:
+        run_id, events = await _run_and_stream(client, {**BODY, "max_credits": 3})
+        run = (await client.get(f"/runs/{run_id}")).json()
+    assert fake.cancelled == ["tf_1"]
+    labels = [e["event"]["label"] for e in events if e["type"] == "trace_event"]
+    assert "Cancelled at the credit limit (3)" in labels
+    assert run["attempts"][0]["outcome"] == "cancelled_budget"
+
+
+async def test_rate_limited_start_is_retried_once(temp_db):
+    fake = FakeTinyFish(
+        streams=[
+            TinyFishError("RATE_LIMIT_EXCEEDED", "slow down", http_status=429),
+            sse_run("tf_2", ["a"], result=PRODUCTS),
+        ],
+        runs={"tf_2": run_record("tf_2", 1)},
+    )
+    async with await _client(temp_db, tinyfish=fake) as client:
+        _, events = await _run_and_stream(client, BODY)
+    assert len(fake.bodies) == 2
+    assert events[-1]["status"] == "verified"
+
+
+async def test_dropped_stream_recovers_by_polling(temp_db):
+    dropped = sse_run("tf_3", ["a", "b"], result=PRODUCTS)[:-1]  # no COMPLETE
+    fake = FakeTinyFish(
+        streams=[dropped],
+        polls={
+            "tf_3": [
+                {"run_id": "tf_3", "status": "RUNNING"},
+                {"run_id": "tf_3", "status": "COMPLETED", "result": PRODUCTS},
+            ]
+        },
+        runs={"tf_3": run_record("tf_3", 2)},
+    )
+    async with await _client(temp_db, tinyfish=fake) as client:
+        _, events = await _run_and_stream(client, BODY)
+    traces = [e["event"] for e in events if e["type"] == "trace_event"]
+    assert any(t["label"] == "Stream dropped — polling the run status" for t in traces)
+    assert any(t["kind"] == "complete" and t["source"] == "tinyfish_runs" for t in traces)
+    assert events[-1]["status"] == "verified"
+
+
+async def test_refused_run_ends_without_a_result(temp_db):
+    fake = FakeTinyFish(
+        streams=[TinyFishError("INSUFFICIENT_CREDITS", "wallet empty", http_status=402)]
+    )
+    async with await _client(temp_db, tinyfish=fake) as client:
+        run_id, events = await _run_and_stream(client, BODY)
+        run = (await client.get(f"/runs/{run_id}")).json()
+    assert run["attempts"][0]["outcome"] == "error"
+    assert run["attempts"][0]["tf_error"]["code"] == "INSUFFICIENT_CREDITS"
+    assert events[-1]["type"] == "verdict"
+
+
+async def test_sites_skip_template_entries_and_report_traces(temp_db, tmp_path):
+    (tmp_path / "traces").mkdir()
+    (tmp_path / "traces" / "books-22.jsonl").write_text("{}\n", encoding="utf-8")
+    (tmp_path / "sites.yaml").write_text(
+        "sites:\n"
+        "  - id: TODO-captcha\n    url: TODO\n    goal: TODO\n"
+        "  - id: books-22\n    url: https://books.toscrape.com/x\n    goal: How many copies?\n"
+        "    expected: {type: regex, value: '\\b22\\b'}\n    expected_class: misread_page\n",
+        encoding="utf-8",
+    )
+    async with await _client(temp_db, settings=_settings(fixtures_dir=tmp_path)) as client:
+        sites = (await client.get("/sites")).json()
+    assert [(s["id"], s["has_trace"], s["expected_class"]) for s in sites] == [
+        ("books-22", True, "misread_page")
+    ]
+
+
+async def test_unknown_run_is_404(temp_db):
+    async with await _client(temp_db) as client:
+        assert (await client.get("/runs/nope")).status_code == 404
+        assert (await client.get("/runs/nope/stream")).status_code == 404
+
+
+async def _finished_run_with_events(services, run_id: str) -> None:
+    run = Run(
+        id=run_id,
+        created_at=datetime(2026, 11, 1, 11, 0, tzinfo=UTC),
+        mode=RunMode.live,
+        request=RunRequest(**{k: v for k, v in BODY.items() if k != "start_rung"}),
+        status=RunStatus.verified,  # saved as final before the verdict event is published
+        max_attempts=4,
+        max_credits=40,
+    )
+    await db.insert_run(run)
+    await Emitter(run_id, services.bus).budget(0, 4, 0, 40)
+
+
+async def test_stream_waits_for_a_verdict_still_in_flight(temp_db):
+    app = create_app(_settings(), tinyfish=FakeTinyFish())
+    services = app.state.services
+    await _finished_run_with_events(services, "race1")
+
+    async def publish_verdict_soon():
+        await asyncio.sleep(0.2)
+        await Emitter("race1", services.bus).verdict(
+            RunStatus.verified,
+            "ok",
+            final_result=None,
+            attempts_used=1,
+            credits_used=1,
+            baseline_credits_estimate=None,
+        )
+
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        publisher = asyncio.create_task(publish_verdict_soon())
+        resp = await c.get("/runs/race1/stream")
+        await publisher
+    assert [e["type"] for e in _events(resp.text)] == ["budget", "verdict"]
+
+
+async def test_stream_of_a_finished_run_without_verdict_ends(temp_db, monkeypatch):
+    monkeypatch.setattr("app.routes.runs.FINISHED_RUN_GRACE_S", 0.05)
+    app = create_app(_settings(), tinyfish=FakeTinyFish())
+    await _finished_run_with_events(app.state.services, "orphan1")
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        resp = await c.get("/runs/orphan1/stream")
+    assert [e["type"] for e in _events(resp.text)] == ["budget"]
+
+
+def test_committed_sites_yaml_is_valid():
+    from app.config import REPO_ROOT
+    from app.sites import load_sites
+
+    sites = load_sites(REPO_ROOT / "fixtures")
+    assert {s.expected_class.value for s in sites} >= {
+        "needs_interaction",
+        "bot_block",
+        "misread_page",
+        "auth_wall",
+        "captcha",
+    }
+    assert all(s.url.startswith("https://") and s.expected is not None for s in sites)
+
+
+async def test_user_cancel_stops_the_tinyfish_run_and_frees_the_live_slot(temp_db):
+    hang = asyncio.Event()
+    stuck = sse_run("tf_c", ["one", "two"], result=PRODUCTS)
+    stuck.insert(5, hang)  # after STARTED, STREAMING_URL, HEARTBEAT and two PROGRESS events
+    fake = FakeTinyFish(streams=[stuck, sse_run("tf_d", ["a"], result=PRODUCTS)])
+    app = create_app(_settings(), tinyfish=fake)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://t") as c:
+        run_id = (await c.post("/runs", json=BODY)).json()["run_id"]
+        for _ in range(500):
+            stored = await db.list_trace_events(run_id)
+            if sum(e.kind == "progress" for e in stored) == 2:
+                break
+            await asyncio.sleep(0.01)
+        cancelled = await c.post(f"/runs/{run_id}/cancel")
+        events = _events((await c.get(f"/runs/{run_id}/stream")).text)
+        run = (await c.get(f"/runs/{run_id}")).json()
+        again = await c.post(f"/runs/{run_id}/cancel")
+        next_run = await c.post("/runs", json=BODY)
+    assert cancelled.status_code == 202
+    assert fake.cancelled == ["tf_c"]
+    assert events[-1]["type"] == "verdict" and events[-1]["status"] == "cancelled"
+    labels = [e["event"]["label"] for e in events if e["type"] == "trace_event"]
+    assert "Cancelled by user" in labels
+    assert run["status"] == "cancelled"
+    assert run["attempts"][0]["credits_estimated"] == 2
+    assert again.status_code == 409
+    assert next_run.status_code == 201  # the live slot was released

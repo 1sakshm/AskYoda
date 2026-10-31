@@ -1,0 +1,123 @@
+"""FastAPI app: run it as a single uvicorn worker (runs and the event bus live in memory)."""
+
+import asyncio
+import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from typing import Any
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app import __version__, db
+from app.config import Settings, get_settings
+from app.events import RunEventBus
+from app.guard import live_usage
+from app.ladder.controller import LadderController
+from app.llm.budget import ClaudeBudget
+from app.llm.claude import ClaudeClient
+from app.llm.gemini import GeminiClient
+from app.models import Health, RunMode
+from app.routes import dev, runs
+from app.services import Services
+from app.tinyfish.client import TinyFishClient
+
+log = logging.getLogger(__name__)
+
+_UNSET: Any = object()
+
+
+def build_services(settings: Settings, *, tinyfish: Any = _UNSET, claude: Any = _UNSET) -> Services:
+    """Clients are built only when their API key exists. Tests inject fakes."""
+    if tinyfish is _UNSET:
+        tinyfish = (
+            TinyFishClient(
+                settings.tinyfish_api_key,
+                settings.tinyfish_agent_base,
+                settings.tinyfish_fetch_base,
+            )
+            if settings.tinyfish_api_key
+            else None
+        )
+    budget = ClaudeBudget(settings.anthropic_budget_usd)
+    if claude is _UNSET:
+        claude = None
+        provider = settings.active_llm_provider
+        if provider == "gemini" and settings.gemini_api_key:
+            claude = GeminiClient(settings.gemini_api_key, settings.gemini_model, budget=budget)
+        elif provider == "anthropic" and settings.anthropic_api_key:
+            try:
+                claude = ClaudeClient(
+                    settings.anthropic_api_key, settings.anthropic_model, budget=budget
+                )
+            except Exception:  # e.g. the SDK can't read its config dir; run without Claude
+                log.exception("could not create the Claude client; continuing without Claude")
+    bus = RunEventBus()
+    return Services(
+        settings=settings,
+        tinyfish=tinyfish,
+        claude=claude,
+        bus=bus,
+        controller=LadderController(settings, tinyfish, claude, bus),
+        live_semaphore=asyncio.Semaphore(settings.max_concurrent_live_runs),
+        claude_budget=budget,
+    )
+
+
+def create_app(
+    settings: Settings | None = None, *, tinyfish: Any = _UNSET, claude: Any = _UNSET
+) -> FastAPI:
+    settings = settings or get_settings()
+    services = build_services(settings, tinyfish=tinyfish, claude=claude)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        await db.init_db()
+        yield
+        for task in list(services.tasks):
+            task.cancel()
+        if services.tinyfish is not None and hasattr(services.tinyfish, "aclose"):
+            await services.tinyfish.aclose()
+        if services.claude is not None and hasattr(services.claude, "aclose"):
+            await services.claude.aclose()
+        await db.dispose()
+
+    app = FastAPI(title="AskYoda", version=__version__, lifespan=lifespan)
+    app.state.settings = settings
+    app.state.services = services
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origin_list,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    app.include_router(dev.router)
+    app.include_router(runs.router)
+
+    @app.get("/health", response_model=Health, tags=["meta"])
+    async def health() -> Health:
+        budget_state = services.claude_budget
+        await budget_state.ensure_loaded()
+        usage = await live_usage(settings)
+        return Health(
+            status="ok",
+            mode=RunMode(settings.mode),
+            tinyfish_key=bool(settings.tinyfish_api_key),
+            anthropic_key=bool(settings.anthropic_api_key),
+            db="ok" if await db.ping() else "error",
+            version=__version__,
+            claude_model=settings.active_llm_model,
+            claude_spent_usd=round(budget_state.spent_usd, 4),
+            claude_budget_usd=budget_state.cap_usd,
+            claude_calls=budget_state.calls,
+            claude_ready=services.claude is not None,
+            live_run_active=usage.active > 0,
+            live_credits_used=usage.credits_used,
+            live_credit_cap=settings.live_credit_cap,
+        )
+
+    return app
+
+
+# No module-level app: importing this module must not build real API clients from .env.
+# Run with: uvicorn --factory app.main:create_app

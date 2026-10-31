@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@theme {
+  /* A failing step flashes twice (2 s) when its diagnosis arrives. */
+  --animate-fail-flash: fail-flash 1s ease-in-out 2;
+  /* A rung that just became active glows once (1.5 s). */
+  --animate-rung-flash: rung-flash 1.5s ease-out 1;
+
+  @keyframes rung-flash {
+    0% {
+      box-shadow: 0 0 0 0 rgb(56 189 248 / 0.7);
+    }
+    40% {
+      box-shadow: 0 0 0 10px rgb(56 189 248 / 0.25);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgb(56 189 248 / 0);
+    }
+  }
+
+  @keyframes fail-flash {
+    0%,
+    100% {
+      background-color: var(--color-rose-950);
+    }
+    50% {
+      background-color: var(--color-rose-700);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fail-flash,
+  .animate-rung-flash {
+    animation: none;
+  }
+}
+
+/* Dark, projector-friendly base. */
+html {
+  font-size: 17px;
+  color-scheme: dark;
+}
+
+/* Projectors at 1600 px and wider get an 18 px base (every rem-based size scales with it). */
+@media (min-width: 1600px) {
+  html {
+    font-size: 18px;
+  }
+}
+
+body {
+  background: var(--color-slate-950);
+  color: var(--color-slate-100);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}

@@ -1,0 +1,18 @@
+prd/
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+.venv/
+__pycache__/
+*.db
+*.sqlite
+.pytest_cache/
+.ruff_cache/
+coverage/
+.DS_Store
+.vercel/
+
+# Rendered demo videos (large; re-made with scripts/demo-video)
+/demo-video/
