@@ -16,6 +16,14 @@ human** when no retry can help — all inside a hard budget of attempts and cred
 npm install askyoda
 ```
 
+### Use it from Claude Code
+
+Install the AskYoda skill and your agent will reach for it whenever it needs verified web data:
+
+```
+/plugin install askyoda --marketplace 1sakshm/AskYoda
+```
+
 ## Quickstart
 
 ```ts

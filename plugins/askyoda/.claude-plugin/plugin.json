@@ -1,0 +1,10 @@
+{
+  "name": "askyoda",
+  "version": "0.1.0",
+  "description": "Get verified data from websites: TinyFish web agents plus an independent verifier that diagnoses failures, patches retries and escalates to a human when needed.",
+  "author": { "name": "1sakshm", "url": "https://github.com/1sakshm" },
+  "homepage": "https://askyoda.vercel.app",
+  "repository": "https://github.com/1sakshm/AskYoda",
+  "license": "MIT",
+  "keywords": ["tinyfish", "web-agent", "scraping", "verification", "askyoda"]
+}

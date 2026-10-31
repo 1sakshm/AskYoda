@@ -1,0 +1,15 @@
+{
+  "name": "askyoda",
+  "owner": { "name": "1sakshm", "url": "https://github.com/1sakshm" },
+  "metadata": {
+    "description": "AskYoda: verified web data for AI agents, built on TinyFish."
+  },
+  "plugins": [
+    {
+      "name": "askyoda",
+      "source": "./plugins/askyoda",
+      "description": "Get verified data from websites with TinyFish web agents and an independent verifier.",
+      "version": "0.1.0"
+    }
+  ]
+}

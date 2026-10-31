@@ -4,6 +4,25 @@
 
 **TinyFish agents can do the work. We tell you when they didn't, why, and fix it automatically.** AskYoda is a reliability layer for TinyFish web agents. You give it a URL, a plain-English goal and, optionally, a check the output must pass. It climbs an escalation ladder: TinyFish Fetch first (read-only, free), then the TinyFish Agent with every step traced live, then the Agent with a stealth browser profile and a proxy. After every attempt an independent verifier checks the output instead of trusting the agent's own `COMPLETED`. When an attempt fails, a diagnoser names the failure, points at the failing step, quotes the evidence and patches the next attempt. Six failure classes are covered: needs interaction, popup overlay, bot block, misread page, auth wall and captcha. Retries stay inside a hard budget of attempts and credits. Auth walls and captchas stop at once with an honest reason instead of burning credits.
 
+## Use it
+
+**As a Claude Code skill** — your agent gets verified web data whenever it needs it:
+
+```
+/plugin install askyoda --marketplace 1sakshm/AskYoda
+```
+
+(On older Claude Code: `/plugin marketplace add 1sakshm/AskYoda`, then `/plugin install askyoda@askyoda`.) Other agents that read Agent Skills can use [`plugins/askyoda/skills/askyoda/SKILL.md`](plugins/askyoda/skills/askyoda/SKILL.md) directly.
+
+**As an npm package** — [`askyoda`](https://www.npmjs.com/package/askyoda), zero dependencies, bring your own TinyFish key:
+
+```sh
+npm i askyoda
+npx askyoda run <url> "<goal>" --min-items laptops:20
+```
+
+**On the web** — https://askyoda.vercel.app: prepared cases, real websites, recorded runs with video, results.
+
 ## What it does
 
 - **Escalation ladder:** Rung 1 TinyFish Fetch + Claude extraction (0 TinyFish credits), Rung 2 TinyFish Agent (`/run-sse`, every event streamed), Rung 3 Agent with a stealth browser and a proxy. A bot wall seen by Fetch skips Rung 2.
