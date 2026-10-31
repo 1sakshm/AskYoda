@@ -1,0 +1,6 @@
+{
+  "title": "Chart that loads on click",
+  "summary": "The 2019 box-office chart loads only after clicking its tab, so a read-only Fetch can't see it. Expect a needs-interaction diagnosis, then the agent clicks the tab and the answer is verified.",
+  "kind": "lab",
+  "expected_class": "needs_interaction"
+}

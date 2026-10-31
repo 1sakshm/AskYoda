@@ -1,6 +1,264 @@
 {
   "runs": [
     {
+      "alone": {
+        "credits": 5,
+        "failure_class": null,
+        "passed": true,
+        "tinyfish_status": "COMPLETED",
+        "verify_summary": "Verified: found 'Spotlight'"
+      },
+      "attempts_used": 2,
+      "baseline_credits_estimate": 12,
+      "classes": [
+        "needs_interaction"
+      ],
+      "credits_used": 4,
+      "events": 22,
+      "expected_class": "needs_interaction",
+      "goal": "Click the 2015 year link and list every Oscar-winning film shown for 2015 with its number of awards.",
+      "has_screenshots": true,
+      "id": "ajax-films",
+      "kind": "recording",
+      "path": "/demo/runs/ajax-films.jsonl",
+      "recorded_at": "2026-10-31T08:23:42.687971Z",
+      "screenshot_attempts": [
+        2
+      ],
+      "site_kind": null,
+      "status": "verified",
+      "summary": "scrapethissite.com (a scraping sandbox) loads each year's films by AJAX after a click. Fetch misses them, the run is diagnosed needs-interaction, and the agent clicks 2015.",
+      "title": "Oscar winners by year",
+      "url": "https://www.scrapethissite.com/pages/ajax-javascript/"
+    },
+    {
+      "alone": {
+        "credits": 3,
+        "failure_class": null,
+        "passed": true,
+        "tinyfish_status": "COMPLETED",
+        "verify_summary": "Verified: matches /\\b22\\b/"
+      },
+      "attempts_used": 1,
+      "baseline_credits_estimate": 9,
+      "classes": [],
+      "credits_used": 3,
+      "events": 14,
+      "expected_class": "misread_page",
+      "goal": "Return this book's availability.",
+      "has_screenshots": true,
+      "id": "books-22",
+      "kind": "recording",
+      "path": "/demo/runs/books-22.jsonl",
+      "recorded_at": "2026-10-31T08:24:53.286512Z",
+      "screenshot_attempts": [
+        1
+      ],
+      "site_kind": null,
+      "status": "verified",
+      "summary": "books.toscrape.com (a scraping sandbox) shows \"In stock (22 available)\". The goal asks loosely for availability while the check needs the count, so a short answer is caught as a misread and the retry asks for the exact text.",
+      "title": "Bookshop availability count",
+      "url": "https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html"
+    },
+    {
+      "alone": null,
+      "attempts_used": 1,
+      "baseline_credits_estimate": 45,
+      "classes": [
+        "auth_wall"
+      ],
+      "credits_used": 0,
+      "events": 9,
+      "expected_class": "auth_wall",
+      "goal": "Return the account holder's name and membership tier shown on the account page.",
+      "has_screenshots": false,
+      "id": "lab-account",
+      "kind": "recording",
+      "path": "/demo/runs/lab-account.jsonl",
+      "recorded_at": "2026-10-31T08:25:56.298765Z",
+      "screenshot_attempts": [],
+      "site_kind": "lab",
+      "status": "unrecoverable",
+      "summary": "The account page redirects to a sign-in form that never lets anyone in. Expect an auth-wall diagnosis and an honest stop before any agent credits are spent.",
+      "title": "Account behind a login",
+      "url": "https://askyoda.vercel.app/lab/account?v=1"
+    },
+    {
+      "alone": null,
+      "attempts_used": 2,
+      "baseline_credits_estimate": 36,
+      "classes": [
+        "bot_block",
+        "bot_block"
+      ],
+      "credits_used": 12,
+      "events": 32,
+      "expected_class": "bot_block",
+      "goal": "Return the name and price of the featured product on this page.",
+      "has_screenshots": false,
+      "id": "lab-blocked",
+      "kind": "recording",
+      "path": "/demo/runs/lab-blocked.jsonl",
+      "recorded_at": "2026-10-31T08:26:55.211211Z",
+      "screenshot_attempts": [],
+      "site_kind": "lab",
+      "status": "unrecoverable",
+      "summary": "Every request gets HTTP 403 \"Access denied\". Expect a bot-block diagnosis, a jump straight to the stealth browser with a proxy, and an honest stop when that is denied too.",
+      "title": "Site that blocks every visitor",
+      "url": "https://askyoda.vercel.app/lab/blocked?v=1"
+    },
+    {
+      "alone": {
+        "credits": 4,
+        "failure_class": "needs_interaction",
+        "passed": false,
+        "tinyfish_status": "COMPLETED",
+        "verify_summary": "Rejected: products has 0 items, need 12"
+      },
+      "attempts_used": 2,
+      "baseline_credits_estimate": 21,
+      "classes": [
+        "misread_page"
+      ],
+      "credits_used": 10,
+      "events": 30,
+      "expected_class": "misread_page",
+      "goal": "List the products in the Spring collection with their prices.",
+      "has_screenshots": true,
+      "id": "lab-catalog",
+      "kind": "recording",
+      "path": "/demo/runs/lab-catalog.jsonl",
+      "recorded_at": "2026-10-31T08:35:39.270822Z",
+      "screenshot_attempts": [
+        1,
+        2
+      ],
+      "site_kind": "lab",
+      "status": "verified",
+      "summary": "The first screen shows 6 products and nothing says there are more: the other 6 load only when you scroll to the bottom. A single TinyFish run reports what it sees and stops short. The check needs all 12, so AskYoda catches the short answer and the retry is told to return all 12.",
+      "title": "Catalog that loads more on scroll",
+      "url": "https://askyoda.vercel.app/lab/catalog.html?v=2"
+    },
+    {
+      "alone": {
+        "credits": 5,
+        "failure_class": null,
+        "passed": true,
+        "tinyfish_status": "COMPLETED",
+        "verify_summary": "Verified: found 'The Glass Orchard'"
+      },
+      "attempts_used": 2,
+      "baseline_credits_estimate": 15,
+      "classes": [
+        "needs_interaction"
+      ],
+      "credits_used": 5,
+      "events": 23,
+      "expected_class": "needs_interaction",
+      "goal": "Open the 2019 tab and list every film shown for 2019 with its box office.",
+      "has_screenshots": true,
+      "id": "lab-films",
+      "kind": "recording",
+      "path": "/demo/runs/lab-films.jsonl",
+      "recorded_at": "2026-10-31T08:17:41.606482Z",
+      "screenshot_attempts": [
+        2
+      ],
+      "site_kind": "lab",
+      "status": "verified",
+      "summary": "The 2019 box-office chart loads only after clicking its tab, so a read-only Fetch can't see it. Expect a needs-interaction diagnosis, then the agent clicks the tab and the answer is verified.",
+      "title": "Chart that loads on click",
+      "url": "https://askyoda.vercel.app/lab/films.html?v=1"
+    },
+    {
+      "alone": {
+        "credits": 3,
+        "failure_class": "needs_interaction",
+        "passed": false,
+        "tinyfish_status": "COMPLETED",
+        "verify_summary": "Rejected: positions has 0 items, need 20"
+      },
+      "attempts_used": 2,
+      "baseline_credits_estimate": 15,
+      "classes": [
+        "misread_page"
+      ],
+      "credits_used": 8,
+      "events": 28,
+      "expected_class": "misread_page",
+      "goal": "List the open positions on this careers page with their title and team.",
+      "has_screenshots": true,
+      "id": "lab-jobs",
+      "kind": "recording",
+      "path": "/demo/runs/lab-jobs.jsonl",
+      "recorded_at": "2026-10-31T08:16:07.269831Z",
+      "screenshot_attempts": [
+        2
+      ],
+      "site_kind": "lab",
+      "status": "verified",
+      "summary": "24 openings spread over 3 pages, and nothing on page 1 says how many there are. A single TinyFish run stops short. The check needs at least 20, so AskYoda catches the short answer, diagnoses it and the retry returns all 24.",
+      "title": "Careers page with pagination",
+      "url": "https://askyoda.vercel.app/lab/jobs.html?v=2"
+    },
+    {
+      "alone": {
+        "credits": 3,
+        "failure_class": null,
+        "passed": true,
+        "tinyfish_status": "COMPLETED",
+        "verify_summary": "Verified: found 'Fernwood Pour-over Kettle'"
+      },
+      "attempts_used": 2,
+      "baseline_credits_estimate": 9,
+      "classes": [
+        "needs_interaction"
+      ],
+      "credits_used": 3,
+      "events": 21,
+      "expected_class": "popup_overlay",
+      "goal": "List the first 3 products with their name and price.",
+      "has_screenshots": true,
+      "id": "lab-shop",
+      "kind": "recording",
+      "path": "/demo/runs/lab-shop.jsonl",
+      "recorded_at": "2026-10-31T08:20:03.684514Z",
+      "screenshot_attempts": [
+        2
+      ],
+      "site_kind": "lab",
+      "status": "verified",
+      "summary": "The products appear only after a cookie choice, and a newsletter popup covers them a few seconds later. Fetch sees only the cookie notice, so expect a needs-interaction diagnosis first. TinyFish's agent usually clears the cookie wall itself; if a popup stops it, the diagnosis is popup overlay and the retry is told to close it first.",
+      "title": "Shop behind a cookie wall",
+      "url": "https://askyoda.vercel.app/lab/shop.html?v=1"
+    },
+    {
+      "alone": null,
+      "attempts_used": 1,
+      "baseline_credits_estimate": 21,
+      "classes": [
+        "captcha"
+      ],
+      "credits_used": 7,
+      "events": 19,
+      "expected_class": "captcha",
+      "goal": "Join the beta with the name Ada Park and the email ada@example.com, submit the form and return the confirmation code shown afterwards. If a CAPTCHA appears, don't try to solve it: report that it is there.",
+      "has_screenshots": true,
+      "id": "lab-signup",
+      "kind": "recording",
+      "path": "/demo/runs/lab-signup.jsonl",
+      "recorded_at": "2026-10-31T08:26:16.528078Z",
+      "screenshot_attempts": [
+        1
+      ],
+      "site_kind": "lab",
+      "status": "unrecoverable",
+      "summary": "The sign-up form can't be submitted without solving a CAPTCHA that always fails. Expect a captcha diagnosis and an honest stop after one agent attempt, instead of more attempts.",
+      "title": "Form behind a CAPTCHA",
+      "url": "https://askyoda.vercel.app/lab/signup.html?v=1"
+    },
+    {
+      "alone": null,
       "attempts_used": 3,
       "baseline_credits_estimate": 15,
       "classes": [
@@ -9,6 +267,7 @@
       ],
       "credits_used": 9,
       "events": 36,
+      "expected_class": null,
       "goal": "List the first 3 products on the page with their name and price.",
       "has_screenshots": false,
       "id": "sample",
@@ -16,7 +275,9 @@
       "path": "/demo/runs/sample.jsonl",
       "recorded_at": "2026-11-01T11:00:00.000Z",
       "screenshot_attempts": [],
+      "site_kind": null,
       "status": "verified",
+      "summary": null,
       "title": "Illustrative sample: cookie popup on a shop page",
       "url": "https://shop.example.com/products"
     }

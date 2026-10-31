@@ -1,0 +1,6 @@
+{
+  "title": "Site that blocks every visitor",
+  "summary": "Every request gets HTTP 403 \"Access denied\". Expect a bot-block diagnosis, a jump straight to the stealth browser with a proxy, and an honest stop when that is denied too.",
+  "kind": "lab",
+  "expected_class": "bot_block"
+}

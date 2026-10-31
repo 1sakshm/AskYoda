@@ -18,6 +18,20 @@ export interface DemoRun {
   has_screenshots: boolean;
   screenshot_attempts: number[];
   path: string;
+  /** From the recording's site entry (fixtures/sites.yaml), when it has one. */
+  summary?: string | null;
+  expected_class?: FailureClass | null;
+  site_kind?: "lab" | "real" | null;
+  /** One plain TinyFish run on the same page, judged by the same verifier. */
+  alone?: AloneResult | null;
+}
+
+export interface AloneResult {
+  passed: boolean;
+  tinyfish_status: string | null;
+  verify_summary: string | null;
+  failure_class: FailureClass | null;
+  credits: number;
 }
 
 export interface DemoIndex {
@@ -43,10 +57,34 @@ export async function loadDemoIndex(fetchImpl: typeof fetch = fetch): Promise<De
   return { version: data.version ?? 1, runs: Array.isArray(data.runs) ? data.runs : [] };
 }
 
-/** Recordings first (newest first), the illustrative sample last. */
+/** Failure classes no retry can fix: these runs end with a hand-off to a person. */
+const HUMAN_CLASSES: FailureClass[] = ["auth_wall", "captcha"];
+/** Sites built to block every visitor, stealth browser included. */
+const ALWAYS_BLOCKED = new Set(["lab-blocked"]);
+
+/** Does this site's story end with "needs human escalation" rather than a fix? */
+export function needsHuman(id: string, expectedClass: FailureClass | null | undefined): boolean {
+  return ALWAYS_BLOCKED.has(id) || (!!expectedClass && HUMAN_CLASSES.includes(expectedClass));
+}
+
+/** TinyFish alone was measured on this page and failed the verifier. */
+export const aloneFailed = (run: DemoRun): boolean => run.alone?.passed === false;
+
+function displayRank(run: DemoRun): number {
+  if (run.kind === "sample") return 3;
+  if (aloneFailed(run) && run.status === "verified") return 0; // TinyFish alone failed, we fixed
+  if (needsHuman(run.id, run.expected_class) || run.status === "unrecoverable") return 2;
+  return 1;
+}
+
+/**
+ * "TinyFish alone failed, AskYoda fixed" first, then the other recordings, then the
+ * human-escalation ones, the illustrative sample last; newest first within a group.
+ */
 export function orderForDisplay(runs: DemoRun[]): DemoRun[] {
   return [...runs].sort((a, b) => {
-    if (a.kind !== b.kind) return a.kind === "recording" ? -1 : 1;
+    const rank = displayRank(a) - displayRank(b);
+    if (rank !== 0) return rank;
     return (b.recorded_at ?? "").localeCompare(a.recorded_at ?? "") || a.id.localeCompare(b.id);
   });
 }

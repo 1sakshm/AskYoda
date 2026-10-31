@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import AloneComparison from "@/components/AloneComparison";
 import {
   SAMPLE_NOTE,
   demoRunId,
   loadDemoIndex,
+  needsHuman,
   orderForDisplay,
   type DemoRun,
 } from "@/lib/demoIndex";
@@ -14,14 +16,28 @@ import { CLASS_COLOR, CLASS_LABEL, STATUS_LABEL, STATUS_STYLE, fmtCredits } from
 
 function RunCard({ run }: { run: DemoRun }) {
   const sample = run.kind === "sample";
+  const human =
+    !sample && (needsHuman(run.id, run.expected_class) || run.status === "unrecoverable");
   return (
     <article className="flex flex-col gap-4 rounded-2xl border border-ink-700 bg-ink-900/80 p-6 transition-colors hover:border-ink-500">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="kicker">{sample ? "Illustrative sample" : "Recording"}</span>
-        {run.status && (
-          <span className={`font-mono text-xs tracking-wide ${STATUS_STYLE[run.status]}`}>
-            {STATUS_LABEL[run.status]}
+        <span className="kicker">
+          {sample
+            ? "Illustrative sample"
+            : run.site_kind === "real"
+              ? "Recording · real website"
+              : "Recording"}
+        </span>
+        {human ? (
+          <span className="rounded-full bg-ember-400/10 px-2.5 py-0.5 text-xs text-ember-300 ring-1 ring-ember-400/35">
+            Needs human escalation
           </span>
+        ) : (
+          run.status && (
+            <span className={`font-mono text-xs tracking-wide ${STATUS_STYLE[run.status]}`}>
+              {STATUS_LABEL[run.status]}
+            </span>
+          )
         )}
       </div>
       <h3 className="font-display text-2xl leading-tight text-ink-50">{run.title}</h3>
@@ -30,12 +46,17 @@ function RunCard({ run }: { run: DemoRun }) {
           {SAMPLE_NOTE}
         </p>
       )}
+      {run.summary ? (
+        <p className="text-sm leading-relaxed text-ink-300">{run.summary}</p>
+      ) : (
+        run.goal && <p className="text-ink-200">{run.goal}</p>
+      )}
       {run.url && (
         <p className="truncate font-mono text-xs text-ink-400" title={run.url}>
           {run.url}
         </p>
       )}
-      {run.goal && <p className="text-ink-200">{run.goal}</p>}
+      <AloneComparison run={run} />
       {run.classes.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           {run.classes.map((c, i) => (

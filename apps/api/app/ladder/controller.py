@@ -276,6 +276,17 @@ class LadderController:
                 )
                 return progress, False, cancelled
             except httpx.HTTPError as e:
+                # Couldn't reach TinyFish before a run existed: our network, not the site.
+                # Retry once instead of handing the diagnoser a failure the site didn't cause.
+                unreached = isinstance(e, (httpx.ConnectError, httpx.ConnectTimeout))
+                if attempt.tf_run_id is None and unreached and try_no == 1:
+                    await tr.note(
+                        TraceKind.stream_error,
+                        f"Stream error: {type(e).__name__}; retrying once in "
+                        f"{RETRY_BEFORE_START_S:.0f}s",
+                    )
+                    await asyncio.sleep(RETRY_BEFORE_START_S)
+                    continue
                 await tr.note(TraceKind.stream_error, f"Stream error: {type(e).__name__}")
                 return progress, False, cancelled
         return progress, False, cancelled

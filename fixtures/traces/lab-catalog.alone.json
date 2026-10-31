@@ -1,0 +1,12 @@
+{
+  "site_id": "lab-catalog",
+  "tinyfish_status": "COMPLETED",
+  "passed": false,
+  "verify_summary": "Rejected: products has 0 items, need 12",
+  "failure_class": "needs_interaction",
+  "result": {
+    "products": []
+  },
+  "credits": 4,
+  "recorded_at": "2026-10-31T08:35:07.563964Z"
+}

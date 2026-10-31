@@ -33,28 +33,27 @@
     <li><div class="name">Seagrass Placemats, set of 4</div><div class="price">£26.00</div></li>
     <li><div class="name">Amber Glass Tumblers, set of 2</div><div class="price">£18.00</div></li>
   </ul>
-  <div class="more">
-    <span id="count">Showing 6 of 12</span>
-    <button id="view-all">View all</button>
-  </div>
+  <div id="sentinel" class="more" aria-hidden="true"></div>
   <footer>Test page for AskYoda. The shop and its products are fictional.</footer>
 </main>
 <script>
-  const MORE = [
-    ["Oak Serving Board", "£36.00"],
-    ["Clay Bud Vase", "£12.50"],
-    ["Wool Seat Pads, set of 2", "£29.00"],
-    ["Brass Candle Snuffer", "£16.00"],
-    ["Hearth Cast-iron Skillet", "£54.00"],
-    ["Juniper Field Lantern", "£39.00"],
-  ];
-  document.getElementById("view-all").addEventListener("click", (e) => {
-    document.getElementById("grid").insertAdjacentHTML(
-      "beforeend",
-      MORE.map(([n, p]) => `<li><div class="name">${n}</div><div class="price">${p}</div></li>`).join("")
-    );
-    document.getElementById("count").textContent = "Showing 12 of 12";
-    e.currentTarget.remove();
+  // The rest of the collection lazy-loads when the bottom of the list scrolls into view, the
+  // way many shops do it: nothing on the first screen says there is more.
+  const MORE = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob("W1siT2FrIFNlcnZpbmcgQm9hcmQiLCAiwqMzNi4wMCJdLCBbIkNsYXkgQnVkIFZhc2UiLCAiwqMxMi41MCJdLCBbIldvb2wgU2VhdCBQYWRzLCBzZXQgb2YgMiIsICLCozI5LjAwIl0sIFsiQnJhc3MgQ2FuZGxlIFNudWZmZXIiLCAiwqMxNi4wMCJdLCBbIkhlYXJ0aCBDYXN0LWlyb24gU2tpbGxldCIsICLCozU0LjAwIl0sIFsiSnVuaXBlciBGaWVsZCBMYW50ZXJuIiwgIsKjMzkuMDAiXV0="), (c) => c.charCodeAt(0))));
+  const io = new IntersectionObserver((entries) => {
+    if (!entries.some((e) => e.isIntersecting)) return;
+    io.disconnect();
+    setTimeout(() => {
+      document.getElementById("grid").insertAdjacentHTML(
+        "beforeend",
+        MORE.map(([n, p]) => `<li><div class="name">${n}</div><div class="price">${p}</div></li>`).join("")
+      );
+    }, 700);
+  });
+  window.addEventListener("load", () => {
+    // Push the sentinel below the first screen so only a scroll reveals it.
+    document.getElementById("sentinel").style.marginTop = "110vh";
+    io.observe(document.getElementById("sentinel"));
   });
 </script>
 </body>

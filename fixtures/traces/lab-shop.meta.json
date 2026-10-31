@@ -1,0 +1,6 @@
+{
+  "title": "Shop behind a cookie wall",
+  "summary": "The products appear only after a cookie choice, and a newsletter popup covers them a few seconds later. Fetch sees only the cookie notice, so expect a needs-interaction diagnosis first. TinyFish's agent usually clears the cookie wall itself; if a popup stops it, the diagnosis is popup overlay and the retry is told to close it first.",
+  "kind": "lab",
+  "expected_class": "popup_overlay"
+}

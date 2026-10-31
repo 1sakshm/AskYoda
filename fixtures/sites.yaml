@@ -73,13 +73,14 @@ sites:
 
   - id: lab-catalog
     kind: lab
-    title: Catalog that shows half
+    title: Catalog that loads more on scroll
     summary: >-
-      Only 6 of 12 products show until "View all" is clicked, and the check needs all 12. An
-      incomplete first answer fails the check and is diagnosed (misread, or needs interaction),
-      and the retry is told to return all 12.
+      The first screen shows 6 products and nothing says there are more: the other 6 load only
+      when you scroll to the bottom. A single TinyFish run reports what it sees and stops short.
+      The check needs all 12, so AskYoda catches the short answer and the retry is told to return
+      all 12.
     cost_hint: about 6–10 credits
-    url: https://askyoda.vercel.app/lab/catalog.html?v=1
+    url: https://askyoda.vercel.app/lab/catalog.html?v=2
     goal: List the products in the Spring collection with their prices.
     expected:
       type: min_items
@@ -100,10 +101,57 @@ sites:
     expected_class: misread_page
     start_rung: agent
     notes: >-
-      Starts at the agent (rung 1 has no "View all" button to press). The misread retry adds
-      "Return at least 12 items in 'products'". Live 2026-10-23: attempt 1 came back empty
-      (expected + not_all_null failed) -> Claude diagnosed needs_interaction (0.85) -> attempt 2
-      returned all 12 -> verified, 8 credits, 56 s.
+      Starts at the agent. v2 (2026-10-31): no "View all" button or "6 of 12" count; the rest
+      lazy-loads on scroll and isn't in the markup. Recorded 2026-10-31: TinyFish alone returned
+      0 products (fail); AskYoda: 6 items -> misread_page (rules) -> retry returned 12 -> verified,
+      10 credits.
+
+  - id: lab-jobs
+    kind: lab
+    title: Careers page with pagination
+    summary: >-
+      24 openings spread over 3 pages, and nothing on page 1 says how many there are. A single
+      TinyFish run stops short. The check needs at least 20, so AskYoda catches the short answer,
+      diagnoses it and the retry returns all 24.
+    cost_hint: about 8–14 credits
+    url: https://askyoda.vercel.app/lab/jobs.html?v=2
+    goal: List the open positions on this careers page with their title and team.
+    expected:
+      type: min_items
+      path: positions
+      min: 20
+    output_schema:
+      type: object
+      properties:
+        positions:
+          type: array
+          items:
+            type: object
+            properties:
+              title: {type: string}
+              team: {type: string}
+            required: [title, team]
+      required: [positions]
+    expected_class: misread_page
+    start_rung: agent
+    notes: >-
+      Pagination is client-side (Next / 1 2 3 buttons), so Fetch only ever sees page 1. Starts at
+      the agent. The misread retry adds "Return at least 20 items in 'positions'".
+
+  - id: lab-guarded
+    kind: lab
+    url: https://askyoda.vercel.app/lab/guarded.html?v=2
+    goal: Return the member price of the Summit Ridge 2P Tent.
+    expected:
+      type: contains
+      value: "389"
+    expected_class: bot_block
+    start_rung: agent
+    notes: >-
+      The check flags navigator.webdriver !== false or a non-standard Notification.permission.
+      Probed 2026-10-31: TinyFish lite -> "Access denied" (wd=1 pm=1); stealth -> price list. But
+      TinyFish's own agent (run-sse) spots the wall and switches browsers itself, so TinyFish
+      alone passes: no card, since it can't show AskYoda beating plain TinyFish.
 
   - id: lab-account
     kind: lab
@@ -148,7 +196,7 @@ sites:
 
   - id: lab-blocked
     kind: lab
-    title: Page that blocks bots
+    title: Site that blocks every visitor
     summary: >-
       Every request gets HTTP 403 "Access denied". Expect a bot-block diagnosis, a jump straight to
       the stealth browser with a proxy, and an honest stop when that is denied too.
@@ -232,11 +280,6 @@ sites:
       https://www.scrapethissite.com/pages/forms/
 
   - id: github-settings
-    title: GitHub settings page
-    summary: >-
-      github.com/settings redirects anyone not signed in to GitHub's login page. Expect an
-      auth-wall diagnosis and an honest stop at 0 credits.
-    cost_hint: 0 credits
     url: https://github.com/settings/profile
     goal: Return the profile display name shown on the settings page.
     expected:
@@ -249,11 +292,6 @@ sites:
       TinyFish untested. Backup: https://www.linkedin.com/feed/
 
   - id: recaptcha-demo
-    title: Google's reCAPTCHA demo
-    summary: >-
-      Google's own reCAPTCHA demo form. The agent can't solve the challenge, so expect a captcha
-      diagnosis and an honest stop after one agent attempt.
-    cost_hint: about 3–10 credits
     url: https://www.google.com/recaptcha/api2/demo
     goal: >-
       Fill in the form, submit it and return the confirmation message shown after submitting. If a

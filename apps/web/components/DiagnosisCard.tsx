@@ -62,7 +62,7 @@ export default function DiagnosisCard({
               : "bg-ember-400/10 text-ember-300 ring-1 ring-ember-400/30"
           }`}
         >
-          {d.recoverable ? "recoverable" : "unrecoverable"}
+          {d.recoverable ? "fixable" : "needs a human"}
         </span>
         <span className="font-mono text-ink-400">{Math.round(d.confidence * 100)}% confident</span>
         <span className="rounded-full border border-ink-600 px-2.5 py-0.5 font-mono text-ink-300">
@@ -109,9 +109,11 @@ export default function DiagnosisCard({
       )}
 
       {patch.stop ? (
-        <div className="rounded-lg border border-ember-500/40 bg-ember-950 p-3 text-sm text-ember-100">
-          <span className="font-semibold">Stop: </span>
-          {patch.stop_reason}
+        <div className="rounded-lg border border-ember-500/40 bg-ember-950 p-4">
+          <p className="font-display text-xl text-ember-200">Needs human escalation</p>
+          {patch.stop_reason && (
+            <p className="mt-1 text-sm text-ember-100/80">{patch.stop_reason}</p>
+          )}
         </div>
       ) : (
         <div className="space-y-2">

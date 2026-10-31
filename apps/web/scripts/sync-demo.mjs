@@ -37,14 +37,33 @@ function readEvents(path) {
   return { text: lines.join("\n") + "\n", events };
 }
 
-function summarize(id, kind, events, screenshotAttempts) {
+/** Optional sidecar JSON next to a recording (<id>.meta.json, <id>.alone.json), else null. */
+function readSidecar(dir, id, suffix) {
+  const path = join(dir, `${id}.${suffix}.json`);
+  return existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : null;
+}
+
+function summarize(id, kind, events, screenshotAttempts, meta = null, alone = null) {
   const started = events.find((e) => e.type === "attempt_started");
   const verdict = events.findLast((e) => e.type === "verdict") ?? null;
   const budget = events.findLast((e) => e.type === "budget") ?? null;
   return {
     id,
     kind,
-    title: kind === "sample" ? SAMPLE_TITLE : `Recorded run: ${id}`,
+    title: kind === "sample" ? SAMPLE_TITLE : (meta?.title ?? `Recorded run: ${id}`),
+    summary: meta?.summary ?? null,
+    expected_class: meta?.expected_class ?? null,
+    site_kind: meta?.kind ?? null,
+    // What one plain TinyFish run delivered on the same page, judged by the same verifier.
+    alone: alone
+      ? {
+          passed: Boolean(alone.passed),
+          tinyfish_status: alone.tinyfish_status ?? null,
+          verify_summary: alone.verify_summary ?? null,
+          failure_class: alone.failure_class ?? null,
+          credits: alone.credits ?? 0,
+        }
+      : null,
     url: started?.config?.url ?? null,
     goal: started?.config?.goal ?? null,
     recorded_at: events[0]?.ts ?? null,
@@ -80,7 +99,7 @@ function buildOutputs() {
   const files = new Map();
   const runs = [];
 
-  const add = (id, kind, source, shotDir) => {
+  const add = (id, kind, source, shotDir, sidecars = null) => {
     if (!ID_RE.test(id)) {
       console.warn(`skipping ${relative(WEB_ROOT, source)}: "${id}" is not a safe run id`);
       return;
@@ -102,6 +121,8 @@ function buildOutputs() {
         kind,
         events,
         shots.sort((a, b) => a - b),
+        sidecars ? readSidecar(sidecars, id, "meta") : null,
+        sidecars ? readSidecar(sidecars, id, "alone") : null,
       ),
     );
   };
@@ -116,7 +137,7 @@ function buildOutputs() {
         console.warn("skipping fixtures/traces/sample.jsonl: the id 'sample' is reserved");
         continue;
       }
-      add(id, "recording", join(traces, name), join(traces, id));
+      add(id, "recording", join(traces, name), join(traces, id), traces);
     }
   }
 

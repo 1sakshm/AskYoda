@@ -1,0 +1,12 @@
+{
+  "site_id": "ajax-films",
+  "tinyfish_status": "COMPLETED",
+  "passed": true,
+  "verify_summary": "Verified: found 'Spotlight'",
+  "failure_class": null,
+  "result": {
+    "result": "Here are all the Oscar-winning films for 2015 with their number of awards:\n\n1. Mad Max: Fury Road - 6 awards\n2. The Revenant - 3 awards\n3. Spotlight - 2 awards\n4. Bridge of Spies - 1 award\n5. The Big Short - 1 award\n6. The Danish Girl - 1 award\n7. Room - 1 award\n8. Ex Machina - 1 award\n9. The Hateful Eight - 1 award\n10. Inside Out - 1 award\n11. Amy - 1 award\n12. Bear Story - 1 award\n13. A Girl in the River: The Price of Forgiveness - 1 award\n14. Son of Saul - 1 award\n15. Spectre - 1 award\n16. Stutterer - 1 award"
+  },
+  "credits": 5,
+  "recorded_at": "2026-10-31T08:24:16.602901Z"
+}

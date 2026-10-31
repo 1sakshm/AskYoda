@@ -55,9 +55,9 @@ def test_card_fields_are_complete():
     assert {s.kind for s in titled} == {"lab", "real"}
     for site in titled:
         assert site.summary and site.cost_hint and site.expected_class, site.id
-    labs = _lab_sites()
-    assert all(s.title for s in labs)
-    assert {s.expected_class for s in labs} == set(FailureClass)  # one lab page per class
+    # A lab page may go without a card (lab-guarded: TinyFish alone already passes it).
+    labs = [s for s in _lab_sites() if s.title]
+    assert {s.expected_class for s in labs} == set(FailureClass)  # one lab card per class
 
 
 def test_indeed_has_no_one_click_card():

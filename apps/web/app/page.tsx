@@ -1,4 +1,6 @@
+import AloneShortfalls from "@/components/AloneShortfalls";
 import DemoRunPicker from "@/components/DemoRunPicker";
+import LoopDiagram from "@/components/diagrams/LoopDiagram";
 import HowItWorks from "@/components/HowItWorks";
 import LiveBudget from "@/components/LiveBudget";
 import RunForm from "@/components/RunForm";
@@ -7,7 +9,7 @@ import { DEMO_MODE } from "@/lib/api";
 
 function Hero() {
   return (
-    <section className="animate-rise grid gap-10 pb-4 lg:grid-cols-[1.35fr_1fr] lg:items-end">
+    <section className="animate-rise grid gap-10 pb-4 lg:grid-cols-[1.25fr_1fr] lg:items-center">
       <div>
         <p className="kicker">A reliability layer for TinyFish web agents</p>
         <h1 className="mt-5 font-display text-5xl leading-[1.02] tracking-tight text-ink-50 sm:text-7xl">
@@ -28,19 +30,20 @@ function Hero() {
             Bring your own URL
           </a>
         </div>
+        <dl className="mt-10 grid max-w-xl grid-cols-3 gap-6 border-t border-ink-700/70 pt-6">
+          {[
+            ["6", "failure classes diagnosed"],
+            ["3", "rungs, cheapest first"],
+            ["0", "credits when Fetch is enough"],
+          ].map(([n, label]) => (
+            <div key={label}>
+              <dt className="font-display text-4xl text-ink-50">{n}</dt>
+              <dd className="mt-1 text-sm leading-snug text-ink-400">{label}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
-      <dl className="grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-ink-700 bg-ink-700 text-center lg:grid-cols-1 lg:text-left">
-        {[
-          ["6", "failure classes diagnosed"],
-          ["3", "rungs, cheapest first"],
-          ["0", "credits when Fetch is enough"],
-        ].map(([n, label]) => (
-          <div key={label} className="bg-ink-900 px-5 py-5 lg:flex lg:items-baseline lg:gap-5">
-            <dt className="font-display text-4xl text-ink-50 lg:w-12">{n}</dt>
-            <dd className="mt-1 text-sm text-ink-300 lg:mt-0">{label}</dd>
-          </div>
-        ))}
-      </dl>
+      <LoopDiagram />
     </section>
   );
 }
@@ -88,6 +91,7 @@ export default function Home() {
     return (
       <main className="space-y-20">
         <Hero />
+        <AloneShortfalls />
         <HowItWorks />
         <section className="space-y-6">
           <SectionHead
@@ -108,6 +112,7 @@ export default function Home() {
   return (
     <main className="space-y-20">
       <Hero />
+      <AloneShortfalls />
       <LiveBudget />
       <ScenarioCards />
       <section id="custom" className="scroll-mt-24 space-y-6">

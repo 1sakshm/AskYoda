@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Trailhead Outfitters · Member prices</title>
+<style>
+  :root { color-scheme: light; --ink: #24211c; --muted: #6b6458; --line: #e3ddd3; --accent: #8a5a1f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: #f7f4ee; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { margin: 0 0 4px; font-size: 28px; }
+  .lede { margin: 0 0 20px; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  th { font-size: 13px; color: var(--muted); font-weight: 600; }
+  td.price { color: var(--accent); font-variant-numeric: tabular-nums; }
+  .blocked { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 28px; }
+  .blocked h1 { font-size: 24px; }
+  .ref { font: 12px ui-monospace, monospace; color: var(--muted); }
+  footer { margin-top: 40px; font-size: 13px; color: var(--muted); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <section id="checking"><p class="lede">Checking your browser…</p></section>
+
+  <section id="denied" class="blocked" hidden>
+    <h1>Access denied</h1>
+    <p>Our bot protection flagged this visit as an automated browser, so the member price list is
+    not available. If you are a person, open the page in a regular browser.</p>
+    <p class="ref" id="ref"></p>
+  </section>
+
+  <section id="content" hidden>
+    <h1>Member price list</h1>
+    <p class="lede">Trailhead Outfitters · autumn tents and shelters · prices for members this week.</p>
+    <table>
+      <thead><tr><th>Product</th><th>Sleeps</th><th>Member price</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </section>
+  <footer>Test page for AskYoda. Trailhead Outfitters and its prices are fictional.</footer>
+</main>
+<script>
+  const PRICES = "W1siU3VtbWl0IFJpZGdlIDJQIFRlbnQiLCAiMiIsICIkMzg5LjAwIl0sIFsiTGFyY2ggSG9sbG93IDNQIFRlbnQiLCAiMyIsICIkNDQ5LjAwIl0sIFsiRmVybmJhY2sgVWx0cmFsaWdodCAxUCIsICIxIiwgIiQzMTIuMDAiXSwgWyJCYXNpbiBDYW1wIDRQIFRlbnQiLCAiNCIsICIkNTI5LjAwIl0sIFsiUmlkZ2VsaW5lIFRhcnAgU2hlbHRlciIsICIyIiwgIiQxNDguMDAiXV0=";
+  // A small client-side bot check, like the ones commercial bot walls run. Real browsers report
+  // navigator.webdriver as false and Notification.permission as default/granted/denied;
+  // automation that patches these badly (webdriver deleted, a made-up permission) is turned away.
+  // A stealth browser keeps them consistent, so it gets through, as does any regular browser.
+  setTimeout(() => {
+    const perm = typeof Notification === "undefined" ? "default" : Notification.permission;
+    const signals = {
+      wd: navigator.webdriver !== false,
+      pm: !["default", "granted", "denied"].includes(perm),
+    };
+    const flagged = signals.wd || signals.pm;
+    document.getElementById("checking").hidden = true;
+    if (flagged) {
+      document.title = "Access denied";
+      document.getElementById("denied").hidden = false;
+      const code = Object.entries(signals).map(([k, v]) => `${k}=${v ? 1 : 0}`).join(" ");
+      document.getElementById("ref").textContent = `Reference: ${code}`;
+    } else {
+      // The price list only enters the page once the check passes, so a blocked browser
+      // can't read it from hidden markup.
+      const rows = JSON.parse(atob(PRICES));
+      document.getElementById("rows").innerHTML = rows
+        .map(([n, s, p]) => `<tr><td>${n}</td><td>${s}</td><td class="price">${p}</td></tr>`)
+        .join("");
+      document.getElementById("content").hidden = false;
+    }
+  }, 600);
+</script>
+</body>
+</html>

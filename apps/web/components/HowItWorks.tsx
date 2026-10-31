@@ -1,3 +1,5 @@
+import LadderDiagram from "@/components/diagrams/LadderDiagram";
+
 const RUNGS = [
   {
     n: "01",
@@ -50,20 +52,25 @@ export default function HowItWorks() {
         </p>
       </div>
 
-      <ol className="grid gap-px overflow-hidden rounded-2xl border border-ink-700 bg-ink-700 md:grid-cols-3">
-        {RUNGS.map((r) => (
-          <li key={r.n} className="flex flex-col gap-3 bg-ink-900 p-6">
-            <div className="flex items-baseline justify-between">
+      <div data-reveal className="grid gap-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+        <LadderDiagram />
+        <ol className="space-y-5 self-center">
+          {RUNGS.map((r) => (
+            <li key={r.n} className="grid grid-cols-[2.5rem_1fr] gap-3">
               <span className="font-mono text-sm text-moss-400">{r.n}</span>
-              <span className="kicker">{r.cost}</span>
-            </div>
-            <h3 className="font-display text-3xl text-ink-50">{r.title}</h3>
-            <p className="text-sm leading-relaxed text-ink-300">{r.body}</p>
-          </li>
-        ))}
-      </ol>
+              <div>
+                <div className="flex flex-wrap items-baseline gap-x-3">
+                  <h3 className="font-display text-2xl text-ink-50">{r.title}</h3>
+                  <span className="kicker">{r.cost}</span>
+                </div>
+                <p className="mt-1 text-sm leading-relaxed text-ink-300">{r.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div data-reveal className="grid gap-4 md:grid-cols-3">
         {LOOP.map((step, i) => (
           <div key={step.title} className="flex gap-4">
             <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-ink-600 font-mono text-xs text-ink-300">

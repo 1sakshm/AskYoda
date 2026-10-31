@@ -1,0 +1,12 @@
+{
+  "site_id": "books-22",
+  "tinyfish_status": "COMPLETED",
+  "passed": true,
+  "verify_summary": "Verified: matches /\\b22\\b/",
+  "failure_class": null,
+  "result": {
+    "result": "The book \"A Light in the Attic\" is in stock with 22 copies available."
+  },
+  "credits": 3,
+  "recorded_at": "2026-10-31T08:25:12.682511Z"
+}

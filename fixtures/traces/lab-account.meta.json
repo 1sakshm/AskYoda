@@ -1,0 +1,6 @@
+{
+  "title": "Account behind a login",
+  "summary": "The account page redirects to a sign-in form that never lets anyone in. Expect an auth-wall diagnosis and an honest stop before any agent credits are spent.",
+  "kind": "lab",
+  "expected_class": "auth_wall"
+}

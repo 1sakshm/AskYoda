@@ -151,6 +151,36 @@ function StepShots({
   );
 }
 
+/** A recorded run's screenshot of this attempt (its last step, or the failing one). */
+function RecordedShot({ src, caption }: { src: string; caption: string }) {
+  const [broken, setBroken] = useState(false);
+  if (broken) {
+    return (
+      <Frame>
+        <Message title="Recorded run" detail={caption} />
+      </Frame>
+    );
+  }
+  return (
+    <Frame>
+      <figure className="h-full w-full">
+        {/* A bundled static image: next/image would add nothing here. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={`Recorded browser screenshot: ${caption}`}
+          className="h-full w-full object-contain"
+          onError={() => setBroken(true)}
+        />
+        <figcaption className="absolute inset-x-0 bottom-0 flex items-center gap-2 border-t border-ink-700 bg-ink-950/90 px-4 py-2.5 text-sm text-ink-200">
+          <span className="kicker shrink-0 text-ochre-300">Recorded</span>
+          <span className="min-w-0 truncate">{caption}</span>
+        </figcaption>
+      </figure>
+    </Frame>
+  );
+}
+
 export default function BrowserPanel({ liveView, attempt, mode, runId, screenshotSrc }: Props) {
   if (!attempt) {
     return (
@@ -172,6 +202,19 @@ export default function BrowserPanel({ liveView, attempt, mode, runId, screensho
   }
 
   const view = liveView && liveView.attemptNo === attempt.attemptNo ? liveView : null;
+
+  // A bundled recording with a screenshot of this attempt: show it while the attempt plays and
+  // after it, instead of a missing live view. Diagnosed attempts keep the failing-step view.
+  const recorded = mode === "replay" && screenshotSrc ? screenshotSrc(attempt.attemptNo) : null;
+  if (recorded && !attempt.diagnosis) {
+    return (
+      <RecordedShot
+        key={`${runId}:${attempt.attemptNo}`}
+        src={recorded}
+        caption={attempt.verify?.summary ?? "Recorded screenshot"}
+      />
+    );
+  }
 
   // After a diagnosed attempt ends, show where it failed (live and replay alike).
   if (attempt.diagnosis && !view?.active) {

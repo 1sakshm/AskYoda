@@ -1,6 +1,6 @@
 # AskYoda. Recipes are POSIX sh; on Windows run make from Git Bash.
 
-.PHONY: setup api web dev test lint fmt types sample record baseline
+.PHONY: setup api web dev test lint fmt types sample record baseline alone
 
 setup:
 	cd apps/api && uv sync
@@ -43,3 +43,7 @@ record:
 baseline:
 	@[ -n "$(SITE)" ] || { echo "usage: make baseline SITE=<id from fixtures/sites.yaml>"; exit 1; }
 	cd apps/api && uv run python ../../scripts/record_trace.py --site $(SITE) --baseline
+
+alone:
+	@[ -n "$(SITE)" ] || { echo "usage: make alone SITE=<id from fixtures/sites.yaml>"; exit 1; }
+	cd apps/api && uv run python ../../scripts/record_trace.py --site $(SITE) --alone

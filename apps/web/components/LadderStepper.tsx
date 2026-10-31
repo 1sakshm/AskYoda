@@ -58,8 +58,19 @@ interface Props {
   rungChanges: RungChangeEvent[];
 }
 
+/** How far the run has climbed, 0–1, for the progress rail behind the rungs. */
+export function climbProgress(rungs: RunViewState["rungs"]): number {
+  let reached = -1;
+  RUNG_ORDER.forEach((rung, i) => {
+    if (rungs[rung].state !== "pending") reached = i;
+  });
+  return reached <= 0 ? 0 : reached / (RUNG_ORDER.length - 1);
+}
+
 export default function LadderStepper({ rungs, rungChanges }: Props) {
   const last = rungChanges[rungChanges.length - 1];
+  const progress = climbProgress(rungs);
+  const ended = RUNG_ORDER.some((r) => rungs[r].state === "passed");
   return (
     <div className="space-y-3">
       <ol className="grid gap-3 md:grid-cols-3">
@@ -69,7 +80,9 @@ export default function LadderStepper({ rungs, rungChanges }: Props) {
           return (
             <li
               key={rung}
-              className={`rounded-xl border px-4 py-3.5 transition-colors ${STATE_STYLE[view.state]}`}
+              className={`rounded-xl border px-4 py-3.5 transition-[background-color,border-color,color,opacity,transform] duration-500 ${
+                view.state === "pending" ? "opacity-80" : "opacity-100"
+              } ${view.state === "active" ? "-translate-y-0.5" : ""} ${STATE_STYLE[view.state]}`}
             >
               <div className="flex items-center justify-between gap-2">
                 <span className={`font-medium ${skipped ? "line-through" : ""}`}>
@@ -96,6 +109,23 @@ export default function LadderStepper({ rungs, rungChanges }: Props) {
           );
         })}
       </ol>
+      {/* How far the run has climbed: a rail with a marker under each rung (desktop). */}
+      <div aria-hidden className="relative mx-[16.6%] hidden h-4 md:block">
+        <div className="absolute inset-x-0 top-1/2 h-px bg-ink-700" />
+        <div
+          className={`absolute inset-x-0 top-1/2 h-px origin-left transition-transform duration-700 ease-out ${
+            ended ? "bg-moss-400" : "bg-ochre-400"
+          }`}
+          style={{ transform: `scaleX(${progress})` }}
+        />
+        {RUNG_ORDER.map((rung, i) => (
+          <span
+            key={rung}
+            className={`absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-ink-950 transition-colors duration-500 ${DOT[rungs[rung].state]}`}
+            style={{ left: `${(i / (RUNG_ORDER.length - 1)) * 100}%` }}
+          />
+        ))}
+      </div>
       {last && <p className="text-sm text-ink-400">{last.reason}</p>}
     </div>
   );

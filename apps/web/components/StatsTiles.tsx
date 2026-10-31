@@ -1,3 +1,5 @@
+import CountUp from "@/components/motion/CountUp";
+import GrowBar from "@/components/motion/GrowBar";
 import { CLASS_COLOR, CLASS_LABEL } from "@/lib/format";
 import type { FailureClass, Stats } from "@/lib/types";
 
@@ -6,7 +8,7 @@ import type { FailureClass, Stats } from "@/lib/types";
 const OURS = "bg-moss-400";
 const BASELINE = "bg-ink-600";
 
-function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
+function Tile({ label, value, hint }: { label: string; value: React.ReactNode; hint: string }) {
   return (
     <div className="bg-ink-900 p-6">
       <div className="kicker">{label}</div>
@@ -21,23 +23,22 @@ function CreditBar({
   value,
   max,
   fill,
+  delayMs = 0,
 }: {
   label: string;
   value: number;
   max: number;
   fill: string;
+  delayMs?: number;
 }) {
   const pct = max > 0 ? (value / max) * 100 : 0;
   return (
     <div className="grid grid-cols-[10rem_1fr] items-center gap-4">
       <span className="text-sm text-ink-300">{label}</span>
       <div className="flex items-center gap-2" title={`${label}: ${value} credits (est.)`}>
-        <div
-          className={`h-3 shrink-0 rounded-full ${fill}`}
-          style={{ width: `${Math.max(pct, value > 0 ? 1 : 0) * 0.85}%` }}
-          role="img"
-          aria-label={`${label}: ${value} credits`}
-        />
+        <span role="img" aria-label={`${label}: ${value} credits`} className="contents">
+          <GrowBar pct={Math.max(pct, value > 0 ? 1 : 0) * 0.85} fill={fill} delayMs={delayMs} />
+        </span>
         <span className="whitespace-nowrap font-mono text-sm text-ink-100">{value} cr</span>
       </div>
     </div>
@@ -45,7 +46,7 @@ function CreditBar({
 }
 
 const show = (stats: Stats | null, pick: (s: Stats) => number) =>
-  stats ? pick(stats).toLocaleString() : "—";
+  stats ? <CountUp value={pick(stats)} /> : "—";
 
 export default function StatsTiles({ stats }: { stats: Stats | null }) {
   const ours = stats?.credits_used_total ?? 0;
@@ -71,9 +72,9 @@ export default function StatsTiles({ stats }: { stats: Stats | null }) {
           hint="verified after an automatic fix"
         />
         <Tile
-          label="Honest stops"
+          label="Human escalations"
           value={show(stats, (s) => s.unrecoverable)}
-          hint="auth walls, captchas, still blocked on stealth"
+          hint="login walls, captchas, sites that block everyone"
         />
         <Tile
           label="Verified first try"
@@ -87,7 +88,7 @@ export default function StatsTiles({ stats }: { stats: Stats | null }) {
           <div>
             <div className="kicker">Credits saved vs the naive baseline</div>
             <div className="mt-3 font-display text-7xl leading-none text-moss-300">
-              {stats ? `${stats.credits_saved.toLocaleString()} cr` : "—"}
+              {stats ? <CountUp value={stats.credits_saved} suffix=" cr" /> : "—"}
             </div>
           </div>
           <div className="font-mono text-sm text-ink-400">
@@ -96,7 +97,13 @@ export default function StatsTiles({ stats }: { stats: Stats | null }) {
         </div>
         <div className="space-y-3">
           <CreditBar label="Ours (est.)" value={ours} max={max} fill={OURS} />
-          <CreditBar label="Naive baseline (est.)" value={baseline} max={max} fill={BASELINE} />
+          <CreditBar
+            label="Naive baseline (est.)"
+            value={baseline}
+            max={max}
+            fill={BASELINE}
+            delayMs={150}
+          />
         </div>
         {classes.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 border-t border-ink-700/70 pt-5 text-xs">

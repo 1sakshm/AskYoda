@@ -1,0 +1,12 @@
+{
+  "site_id": "lab-jobs",
+  "tinyfish_status": "COMPLETED",
+  "passed": false,
+  "verify_summary": "Rejected: positions has 0 items, need 20",
+  "failure_class": "needs_interaction",
+  "result": {
+    "positions": []
+  },
+  "credits": 3,
+  "recorded_at": "2026-10-31T08:15:00.931798Z"
+}

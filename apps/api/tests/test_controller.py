@@ -337,3 +337,20 @@ async def test_misread_is_fixed_by_a_free_re_extraction_from_the_cached_fetch(te
     )
     labels = [e["event"]["label"] for e in events if e["type"] == "trace_event"]
     assert "Using cached Fetch text (0 credits)" in labels
+
+
+async def test_connect_timeout_before_a_run_is_retried_not_diagnosed(temp_db, monkeypatch):
+    import httpx
+
+    async def instant(_s):
+        return None
+
+    monkeypatch.setattr("app.ladder.controller.asyncio.sleep", instant)
+    tinyfish = FakeTinyFish(
+        streams=[httpx.ConnectTimeout("timed out"), _sse("tf_c", ["Reading"], result=PRODUCTS)]
+    )
+    request = SAMPLE_REQUEST.model_copy(update={"start_rung": Rung.agent})
+    run, _ = await _execute(tinyfish, FakeClaude(), request)
+    assert run.status is RunStatus.verified
+    assert len(run.attempts) == 1 and run.attempts[0].diagnosis is None
+    assert len(tinyfish.bodies) == 2

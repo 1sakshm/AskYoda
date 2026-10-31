@@ -1,0 +1,6 @@
+{
+  "title": "Careers page with pagination",
+  "summary": "24 openings spread over 3 pages, and nothing on page 1 says how many there are. A single TinyFish run stops short. The check needs at least 20, so AskYoda catches the short answer, diagnoses it and the retry returns all 24.",
+  "kind": "lab",
+  "expected_class": "misread_page"
+}

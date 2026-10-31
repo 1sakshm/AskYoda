@@ -1,0 +1,12 @@
+{
+  "site_id": "lab-films",
+  "tinyfish_status": "COMPLETED",
+  "passed": true,
+  "verify_summary": "Verified: found 'The Glass Orchard'",
+  "failure_class": null,
+  "result": {
+    "result": "Films for 2019 with their box office amounts:\n1. The Glass Orchard ($212.4M)\n2. Salt and Lanterns ($148.9M)\n3. Paper Comets ($97.3M)\n4. The Quiet Engine ($61.0M)\n5. Harbor of Small Hours ($38.2M)"
+  },
+  "credits": 5,
+  "recorded_at": "2026-10-31T08:18:40.549857Z"
+}

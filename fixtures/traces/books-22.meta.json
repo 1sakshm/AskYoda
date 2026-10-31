@@ -1,0 +1,6 @@
+{
+  "title": "Bookshop availability count",
+  "summary": "books.toscrape.com (a scraping sandbox) shows \"In stock (22 available)\". The goal asks loosely for availability while the check needs the count, so a short answer is caught as a misread and the retry asks for the exact text.",
+  "kind": null,
+  "expected_class": "misread_page"
+}

@@ -239,3 +239,115 @@ body {
     text-decoration-color: var(--color-moss-300);
   }
 }
+
+/* ---------------------------------------------------------------------------------------------
+ * Motion: diagrams and reveals. Everything here is decorative and switched off for
+ * prefers-reduced-motion (components then render their final, static state).
+ * ------------------------------------------------------------------------------------------- */
+@keyframes ay-pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgb(191 209 102 / 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgb(191 209 102 / 0);
+  }
+}
+
+@keyframes ay-stamp {
+  0% {
+    opacity: 0;
+    transform: scale(1.6) rotate(-8deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.94) rotate(-8deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(-8deg);
+  }
+}
+
+@keyframes ay-dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes ay-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes ay-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.ay-pulse {
+  animation: ay-pulse-ring 1.6s ease-out infinite;
+}
+
+.ay-pop {
+  animation: ay-pop 380ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.ay-stamp {
+  animation: ay-stamp 420ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.ay-draw {
+  stroke-dasharray: var(--ay-len, 400);
+  stroke-dashoffset: var(--ay-len, 400);
+  animation: ay-dash 900ms cubic-bezier(0.6, 0, 0.2, 1) forwards;
+}
+
+.ay-shimmer {
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgb(245 240 231 / 0.08) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: ay-shimmer 2.2s linear infinite;
+}
+
+/* Scroll reveal without JavaScript: sections rise in as they enter the viewport, where the
+ * browser supports scroll-driven animations. Elsewhere they simply show. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-reveal] {
+      animation: rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ay-pulse,
+  .ay-pop,
+  .ay-stamp,
+  .ay-draw,
+  .ay-shimmer {
+    animation: none !important;
+  }
+  .ay-draw {
+    stroke-dashoffset: 0;
+  }
+}

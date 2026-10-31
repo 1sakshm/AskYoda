@@ -53,7 +53,7 @@ export const STATUS_LABEL: Record<RunStatus, string> = {
   queued: "QUEUED",
   running: "RUNNING",
   verified: "VERIFIED",
-  unrecoverable: "UNRECOVERABLE",
+  unrecoverable: "NEEDS HUMAN ESCALATION",
   budget_exhausted: "BUDGET SPENT",
   error: "ERROR",
   cancelled: "CANCELLED",

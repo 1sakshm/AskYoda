@@ -7,6 +7,7 @@ import {
   demoRunId,
   demoStats,
   demoStreamUrl,
+  needsHuman,
   orderForDisplay,
   type DemoIndex,
   type DemoRun,
@@ -125,5 +126,30 @@ describe("demo ids and urls", () => {
       run({ id: "new", recorded_at: "2026-11-01T14:00:00.000Z" }),
     ]);
     expect(ordered.map((r) => r.id)).toEqual(["new", "old", "sample"]);
+  });
+
+  it("orders TinyFish-alone failures we fixed first and human escalations last", () => {
+    const failed = {
+      passed: false,
+      tinyfish_status: "COMPLETED",
+      verify_summary: "x",
+      failure_class: null,
+      credits: 4,
+    };
+    const ordered = orderForDisplay([
+      run({ id: "sample", kind: "sample" }),
+      run({ id: "lab-account", status: "unrecoverable", expected_class: "auth_wall" }),
+      run({ id: "plain" }),
+      run({ id: "fixed", alone: failed }),
+    ]);
+    expect(ordered.map((r) => r.id)).toEqual(["fixed", "plain", "lab-account", "sample"]);
+  });
+
+  it("knows which stories end with a human", () => {
+    expect(needsHuman("lab-signup", "captcha")).toBe(true);
+    expect(needsHuman("x", "auth_wall")).toBe(true);
+    expect(needsHuman("lab-blocked", "bot_block")).toBe(true);
+    expect(needsHuman("lab-guarded", "bot_block")).toBe(false);
+    expect(needsHuman("lab-jobs", null)).toBe(false);
   });
 });

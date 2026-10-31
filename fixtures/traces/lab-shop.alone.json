@@ -1,0 +1,25 @@
+{
+  "site_id": "lab-shop",
+  "tinyfish_status": "COMPLETED",
+  "passed": true,
+  "verify_summary": "Verified: found 'Fernwood Pour-over Kettle'",
+  "failure_class": null,
+  "result": {
+    "products": [
+      {
+        "name": "Fernwood Pour-over Kettle",
+        "price": "£42.00"
+      },
+      {
+        "name": "Ashgrove Ceramic Dripper",
+        "price": "£19.50"
+      },
+      {
+        "name": "Millbrook Burr Grinder",
+        "price": "£88.00"
+      }
+    ]
+  },
+  "credits": 3,
+  "recorded_at": "2026-10-31T08:21:27.542058Z"
+}

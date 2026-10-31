@@ -2,8 +2,9 @@
 
 Talks to the running API over HTTP only (start it first with `make api`; it needs real keys).
 
-    make record SITE=<id>      # live run -> fixtures/traces/<id>.jsonl (+ failing-step JPEGs)
+    make record SITE=<id>      # live run -> fixtures/traces/<id>.jsonl (+ one JPEG per attempt)
     make baseline SITE=<id>    # one stealth + proxy run -> prints `baseline_steps: N`
+    make alone SITE=<id>       # one plain TinyFish agent run -> fixtures/traces/<id>.alone.json
 
 Equivalent: cd apps/api && uv run python ../../scripts/record_trace.py --site <id> [--baseline]
 """
@@ -32,7 +33,7 @@ def load_site(site_id: str) -> dict[str, Any]:
     sys.exit(f"unknown site {site_id!r}; ids are listed in fixtures/sites.yaml")
 
 
-def run_body(site: dict[str, Any], baseline: bool) -> dict[str, Any]:
+def run_body(site: dict[str, Any], baseline: bool, alone: bool = False) -> dict[str, Any]:
     body: dict[str, Any] = {
         "url": site["url"],
         "goal": site["goal"],
@@ -46,6 +47,9 @@ def run_body(site: dict[str, Any], baseline: bool) -> dict[str, Any]:
     }
     if baseline:
         body.update(start_rung="agent_stealth", max_attempts=1)
+    if alone:
+        # TinyFish on its own: the default browser, the plain goal, one try, no fixes.
+        body.update(start_rung="agent", max_attempts=1)
     return body
 
 
@@ -83,13 +87,15 @@ def follow(client: httpx.Client, api: str, run_id: str) -> list[str]:
 
 
 def save_screenshots(client: httpx.Client, api: str, run: dict[str, Any], site_id: str) -> int:
+    """One JPEG per agent attempt: the failing step if it was diagnosed, else its last step."""
     saved = 0
     folder = FIXTURES / "traces" / site_id
     for attempt in run.get("attempts") or []:
-        if not attempt.get("diagnosis"):
+        if attempt.get("rung") == "fetch":
             continue
         n = attempt["attempt_no"]
-        resp = client.get(f"{api}/runs/{run['id']}/attempts/{n}/screenshot")
+        kind = "screenshot" if attempt.get("diagnosis") else "latest-screenshot"
+        resp = client.get(f"{api}/runs/{run['id']}/attempts/{n}/{kind}")
         if resp.status_code == 200 and resp.content:
             folder.mkdir(parents=True, exist_ok=True)
             (folder / f"attempt-{n}.jpg").write_bytes(resp.content)
@@ -97,24 +103,53 @@ def save_screenshots(client: httpx.Client, api: str, run: dict[str, Any], site_i
     return saved
 
 
+def save_alone(run: dict[str, Any], site_id: str) -> int:
+    """What TinyFish alone delivered, as judged by the same verifier, for the comparison card."""
+    attempt = (run.get("attempts") or [{}])[0]
+    verify = attempt.get("verify") or {}
+    diagnosis = attempt.get("diagnosis") or {}
+    summary = {
+        "site_id": site_id,
+        "tinyfish_status": attempt.get("tf_status"),
+        "passed": bool(verify.get("passed")),
+        "verify_summary": verify.get("summary"),
+        "failure_class": diagnosis.get("failure_class"),
+        "result": attempt.get("result"),
+        "credits": run.get("credits_used", 0),
+        "recorded_at": run.get("created_at"),
+    }
+    out = FIXTURES / "traces" / f"{site_id}.alone.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    verdict = "passed" if summary["passed"] else "failed"
+    print(f"\nwrote {out.relative_to(REPO)}: TinyFish alone {verdict}")
+    print(f"  {summary['verify_summary']}")
+    return 0
+
+
 def main() -> int:
+    # Windows consoles default to cp1252, which can't print every trace label.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter
     )
     parser.add_argument("--site", required=True, help="site id from fixtures/sites.yaml")
     parser.add_argument("--api", default="http://localhost:8000", help="API base URL")
     parser.add_argument("--baseline", action="store_true", help="measure one stealth+proxy run")
+    parser.add_argument("--alone", action="store_true", help="one plain TinyFish run, judged")
     args = parser.parse_args()
 
     site = load_site(args.site)
     api = args.api.rstrip("/")
     with httpx.Client(timeout=30.0) as client:
-        created = client.post(f"{api}/runs", json=run_body(site, args.baseline))
+        created = client.post(f"{api}/runs", json=run_body(site, args.baseline, args.alone))
         if created.status_code != 201:
             print(f"POST /runs failed ({created.status_code}): {created.text}", file=sys.stderr)
             return 1
         run_id = created.json()["run_id"]
-        print(f"run {run_id} ({'baseline' if args.baseline else 'record'}) for {args.site}")
+        label = "baseline" if args.baseline else "alone" if args.alone else "record"
+        print(f"run {run_id} ({label}) for {args.site}")
         lines = follow(client, api, run_id)
         run = client.get(f"{api}/runs/{run_id}").json()
 
@@ -125,10 +160,17 @@ def main() -> int:
             )
             return 0
 
+        if args.alone:
+            return save_alone(run, args.site)
+
         out = FIXTURES / "traces" / f"{args.site}.jsonl"
         out.parent.mkdir(parents=True, exist_ok=True)
         with out.open("w", encoding="utf-8", newline="\n") as fh:
             fh.write("\n".join(lines) + "\n")
+        meta = {k: site.get(k) for k in ("title", "summary", "kind", "expected_class")}
+        (FIXTURES / "traces" / f"{args.site}.meta.json").write_text(
+            json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
         shots = save_screenshots(client, api, run, args.site)
         classes = [a["diagnosis"]["failure_class"] for a in run["attempts"] if a.get("diagnosis")]
         print(f"\nwrote {out.relative_to(REPO)} ({len(lines)} events, {shots} screenshots)")

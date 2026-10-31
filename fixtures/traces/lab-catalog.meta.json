@@ -1,0 +1,6 @@
+{
+  "title": "Catalog that loads more on scroll",
+  "summary": "The first screen shows 6 products and nothing says there are more: the other 6 load only when you scroll to the bottom. A single TinyFish run reports what it sees and stops short. The check needs all 12, so AskYoda catches the short answer and the retry is told to return all 12.",
+  "kind": "lab",
+  "expected_class": "misread_page"
+}

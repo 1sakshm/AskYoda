@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Fernhill · Careers</title>
+<style>
+  :root { color-scheme: light; --ink: #24211c; --muted: #6b6458; --line: #e3ddd3; --accent: #3f6b4a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); background: #f7f4ee; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { margin: 0 0 4px; font-size: 28px; }
+  .lede { margin: 0 0 20px; color: var(--muted); }
+  .jobs { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  .jobs li { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; justify-content: space-between; gap: 12px; }
+  .jobs .title { font-weight: 600; }
+  .jobs .meta { color: var(--muted); font-size: 14px; text-align: right; }
+  .pager { margin-top: 18px; display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; }
+  .pager button { font: inherit; min-width: 36px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; }
+  .pager button[aria-current="page"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .pager button:disabled { opacity: .4; cursor: default; }
+  footer { margin-top: 40px; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Open positions</h1>
+  <p class="lede">Fernhill builds tools for small farms. We're hiring across every team.</p>
+  <ul class="jobs" id="jobs">
+    <li><span class="title">Senior Backend Engineer</span><span class="meta">Platform · Remote</span></li>
+    <li><span class="title">Product Designer</span><span class="meta">Design · Lisbon</span></li>
+    <li><span class="title">Field Agronomist</span><span class="meta">Customer Success · Leeds</span></li>
+    <li><span class="title">Data Engineer</span><span class="meta">Platform · Remote</span></li>
+    <li><span class="title">Account Executive</span><span class="meta">Sales · Dublin</span></li>
+    <li><span class="title">iOS Engineer</span><span class="meta">Mobile · Remote</span></li>
+    <li><span class="title">Support Specialist</span><span class="meta">Customer Success · Lisbon</span></li>
+    <li><span class="title">Engineering Manager</span><span class="meta">Platform · Dublin</span></li>
+  </ul>
+  <nav class="pager" aria-label="Pages">
+    <button id="prev" disabled>‹ Prev</button>
+    <button data-page="1" aria-current="page">1</button>
+    <button data-page="2">2</button>
+    <button data-page="3">3</button>
+    <button id="next">Next ›</button>
+  </nav>
+  <footer>Test page for AskYoda. Fernhill and these jobs are fictional.</footer>
+</main>
+<script>
+  const JOBS = JSON.parse(atob("W1siU2VuaW9yIEJhY2tlbmQgRW5naW5lZXIiLCAiUGxhdGZvcm0gXHUwMGI3IFJlbW90ZSJdLCBbIlByb2R1Y3QgRGVzaWduZXIiLCAiRGVzaWduIFx1MDBiNyBMaXNib24iXSwgWyJGaWVsZCBBZ3Jvbm9taXN0IiwgIkN1c3RvbWVyIFN1Y2Nlc3MgXHUwMGI3IExlZWRzIl0sIFsiRGF0YSBFbmdpbmVlciIsICJQbGF0Zm9ybSBcdTAwYjcgUmVtb3RlIl0sIFsiQWNjb3VudCBFeGVjdXRpdmUiLCAiU2FsZXMgXHUwMGI3IER1YmxpbiJdLCBbImlPUyBFbmdpbmVlciIsICJNb2JpbGUgXHUwMGI3IFJlbW90ZSJdLCBbIlN1cHBvcnQgU3BlY2lhbGlzdCIsICJDdXN0b21lciBTdWNjZXNzIFx1MDBiNyBMaXNib24iXSwgWyJFbmdpbmVlcmluZyBNYW5hZ2VyIiwgIlBsYXRmb3JtIFx1MDBiNyBEdWJsaW4iXSwgWyJBbmRyb2lkIEVuZ2luZWVyIiwgIk1vYmlsZSBcdTAwYjcgUmVtb3RlIl0sIFsiU29pbCBEYXRhIFNjaWVudGlzdCIsICJSZXNlYXJjaCBcdTAwYjcgTGVlZHMiXSwgWyJUZWNobmljYWwgV3JpdGVyIiwgIlByb2R1Y3QgXHUwMGI3IFJlbW90ZSJdLCBbIlNlY3VyaXR5IEVuZ2luZWVyIiwgIlBsYXRmb3JtIFx1MDBiNyBEdWJsaW4iXSwgWyJQYXJ0bmVyc2hpcHMgTGVhZCIsICJTYWxlcyBcdTAwYjcgTGlzYm9uIl0sIFsiUUEgRW5naW5lZXIiLCAiTW9iaWxlIFx1MDBiNyBSZW1vdGUiXSwgWyJCcmFuZCBEZXNpZ25lciIsICJEZXNpZ24gXHUwMGI3IExlZWRzIl0sIFsiT25ib2FyZGluZyBNYW5hZ2VyIiwgIkN1c3RvbWVyIFN1Y2Nlc3MgXHUwMGI3IER1YmxpbiJdLCBbIkhhcmR3YXJlIEVuZ2luZWVyIiwgIlNlbnNvcnMgXHUwMGI3IExlZWRzIl0sIFsiRmlybXdhcmUgRW5naW5lZXIiLCAiU2Vuc29ycyBcdTAwYjcgUmVtb3RlIl0sIFsiUmVjcnVpdGVyIiwgIlBlb3BsZSBcdTAwYjcgTGlzYm9uIl0sIFsiRmluYW5jZSBBbmFseXN0IiwgIkZpbmFuY2UgXHUwMGI3IER1YmxpbiJdLCBbIlNpdGUgUmVsaWFiaWxpdHkgRW5naW5lZXIiLCAiUGxhdGZvcm0gXHUwMGI3IFJlbW90ZSJdLCBbIkdyb3d0aCBNYXJrZXRlciIsICJNYXJrZXRpbmcgXHUwMGI3IExpc2JvbiJdLCBbIlJlc2VhcmNoIEFncm9ub21pc3QiLCAiUmVzZWFyY2ggXHUwMGI3IExlZWRzIl0sIFsiT2ZmaWNlIENvb3JkaW5hdG9yIiwgIlBlb3BsZSBcdTAwYjcgRHVibGluIl1d"));
+  const PER_PAGE = 8;
+  let page = 1;
+  function render() {
+    const rows = JOBS.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+    document.getElementById("jobs").innerHTML = rows
+      .map(([t, m]) => `<li><span class="title">${t}</span><span class="meta">${m}</span></li>`)
+      .join("");
+    document.querySelectorAll("[data-page]").forEach((b) => {
+      if (Number(b.dataset.page) === page) b.setAttribute("aria-current", "page");
+      else b.removeAttribute("aria-current");
+    });
+    document.getElementById("prev").disabled = page === 1;
+    document.getElementById("next").disabled = page === 3;
+  }
+  document.querySelectorAll("[data-page]").forEach((b) =>
+    b.addEventListener("click", () => { page = Number(b.dataset.page); render(); })
+  );
+  document.getElementById("prev").addEventListener("click", () => { if (page > 1) { page--; render(); } });
+  document.getElementById("next").addEventListener("click", () => { if (page < 3) { page++; render(); } });
+</script>
+</body>
+</html>

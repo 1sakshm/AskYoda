@@ -1,0 +1,6 @@
+{
+  "title": "Oscar winners by year",
+  "summary": "scrapethissite.com (a scraping sandbox) loads each year's films by AJAX after a click. Fetch misses them, the run is diagnosed needs-interaction, and the agent clicks 2015.",
+  "kind": null,
+  "expected_class": "needs_interaction"
+}
